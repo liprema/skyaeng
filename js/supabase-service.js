@@ -171,6 +171,25 @@ window.ScayaCloud = {
     return state;
   },
 
+  checkDailyStreakOnLoad(state) {
+    try {
+      if (!state || !state.stats) return state;
+      const today = new Date().toISOString().slice(0, 10);
+      const last = state.stats.lastActiveDate || today;
+      if (last === today) return state;
+      const diffDays = Math.round((new Date(today) - new Date(last)) / 86400000);
+      if (diffDays === 2 && (state.stats.streakFreeze || 0) > 0) {
+        state.stats.streakFreeze -= 1;
+        state.stats.lastActiveDate = today;
+      } else if (diffDays > 1) {
+        state.stats.lostStreakDays = state.stats.streakDays || 7;
+        state.stats.streakDays = 0;
+        state.stats.lastActiveDate = today;
+      }
+    } catch (e) {}
+    return state;
+  },
+
   loadState() {
     try {
       const key = this.getStorageKey();
@@ -188,6 +207,7 @@ window.ScayaCloud = {
         flashcards: Array.isArray(parsed.flashcards) && parsed.flashcards.length ? parsed.flashcards : def.flashcards,
         completedStories: Array.isArray(parsed.completedStories) ? parsed.completedStories : []
       };
+      this.checkDailyStreakOnLoad(merged);
       return this.applyVipPerksIfNeeded(merged);
     } catch (e) {
       return this.applyVipPerksIfNeeded(this.getDefaultState());
@@ -209,7 +229,13 @@ window.ScayaCloud = {
 
   async syncToTelegramServer(state) {
     try {
-      if (typeof window !== 'undefined' && window.location && /^https?:/.test(window.location.protocol) && typeof fetch === 'function') {
+      if (
+        typeof window !== 'undefined' &&
+        window.location &&
+        /^https?:/.test(window.location.protocol) &&
+        !window.location.hostname.includes('github.io') &&
+        typeof fetch === 'function'
+      ) {
         const { uid, isVip } = this.getSessionIdentity();
         await fetch(`/api/user_state?uid=${encodeURIComponent(uid)}&vip=${isVip ? '1' : '0'}`, {
           method: 'POST',
@@ -218,7 +244,7 @@ window.ScayaCloud = {
         });
       }
     } catch (e) {
-      // Игнорируем при открытии локального файла file://
+      // Игнорируем при открытии локального файла file:// или GitHub Pages
     }
   },
 

@@ -154,7 +154,13 @@ const ScayaApp = {
     try {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       if (!Ctx) return;
-      const ctx = new Ctx();
+      if (!this._audioCtx || this._audioCtx.state === 'closed') {
+        this._audioCtx = new Ctx();
+      }
+      const ctx = this._audioCtx;
+      if (ctx.state === 'suspended' && typeof ctx.resume === 'function') {
+        ctx.resume().catch(() => {});
+      }
       const now = ctx.currentTime;
 
       if (type === 'correct') {
@@ -1048,7 +1054,8 @@ const ScayaApp = {
   // ПРЫЖОК ЧЕРЕЗ ТЕМЫ ЭКСТЕРНОМ («ОТКРЫТЬ ЭКСТЕРНОМ»)
   // --------------------------------------------------------------------------
   startSkipJumpTest(targetUnitId) {
-    if (this.state.stats.hearts <= 0) {
+    const isVipHearts = Boolean(this.state.user.isVipTester || this.state.stats.unlimitedHearts);
+    if (!isVipHearts && this.state.stats.hearts <= 0) {
       this.openHeartsModal();
       return;
     }
@@ -1083,7 +1090,8 @@ const ScayaApp = {
   // УРОК ИЗ 5 ЭТАПОВ (СЛОВА+ГРАММАТИКА • ПОРЯДОК СЛОВ • ЧТЕНИЕ • СЛУХ • РЕЧЬ)
   // --------------------------------------------------------------------------
   startUnitLesson(unitId) {
-    if (this.state.stats.hearts <= 0) {
+    const isVipHearts = Boolean(this.state.user.isVipTester || this.state.stats.unlimitedHearts);
+    if (!isVipHearts && this.state.stats.hearts <= 0) {
       this.openHeartsModal();
       return;
     }
@@ -2098,6 +2106,18 @@ const ScayaApp = {
       this.state.stats.pearls += 25;
     }
 
+    // Обновление ежедневной ударной серии (Streak) при завершении урока
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const last = this.state.stats.lastActiveDate || '';
+      if (last !== today) {
+        this.state.stats.streakDays = (this.state.stats.streakDays || 0) + 1;
+        this.state.stats.lastActiveDate = today;
+      } else if (!this.state.stats.streakDays) {
+        this.state.stats.streakDays = 1;
+      }
+    } catch (e) {}
+
     window.ScayaCloud.saveState(this.state);
   },
 
@@ -2549,7 +2569,8 @@ const ScayaApp = {
     const unit = (window.ScayaCurriculum.units || []).find(u => u.id === unitId);
     if (!unit) return;
     const allEx = JSON.parse(JSON.stringify(unit.exercises || []));
-    const readIdx = allEx.findIndex(e => e.type === 'reading_comprehension');
+    const readingOnly = allEx.filter(e => e.type === 'reading_comprehension');
+    const chosenEx = readingOnly.length > 0 ? readingOnly : allEx;
     this.session = {
       active: true,
       mode: 'unit',
@@ -2557,8 +2578,8 @@ const ScayaApp = {
       vocabIntroStep: false,
       readingStage: false,
       showReadingTranslation: false,
-      exercises: allEx,
-      currentIndex: readIdx >= 0 ? readIdx : 0,
+      exercises: chosenEx,
+      currentIndex: 0,
       selectedAnswer: null,
       assembledWords: [],
       availableWords: [],
@@ -3099,31 +3120,34 @@ const ScayaApp = {
     canvas.height = 1100;
     const ctx = canvas.getContext('2d');
 
-    const grad = ctx.createLinearGradient(0, 0, 900, 1100);
+    ctx.fillStyle = '#F5F2E6';
+    ctx.fillRect(0, 0, 900, 1100);
+
+    const grad = ctx.createLinearGradient(40, 40, 860, 1060);
     grad.addColorStop(0, card.bgGradient[0]);
     grad.addColorStop(1, card.bgGradient[1]);
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 900, 1100);
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 8;
+    ctx.fillRect(40, 40, 820, 1020);
+    ctx.strokeRect(40, 40, 820, 1020);
 
-    ctx.fillStyle = '#F472B6';
-    ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillStyle = '#FFEE00';
+    ctx.font = '900 30px -apple-system, BlinkMacSystemFont, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText(`🐬🌸 SCAYA • ${card.category.toUpperCase()}`, 450, 110);
-
-    ctx.font = '140px serif';
-    ctx.fillText('🐬🌸🧜‍♀️🦈', 450, 320);
-
-    ctx.fillStyle = '#FDE047';
-    ctx.font = 'bold 42px -apple-system, BlinkMacSystemFont, sans-serif';
-    this.wrapCanvasText(ctx, card.skyTitle, 450, 440, 740, 52);
+    ctx.fillText(`SCAYA • ${card.category.toUpperCase()}`, 450, 130);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '34px -apple-system, BlinkMacSystemFont, sans-serif';
-    this.wrapCanvasText(ctx, `«${card.skyText}»`, 450, 580, 740, 48);
+    ctx.font = '900 44px -apple-system, BlinkMacSystemFont, sans-serif';
+    this.wrapCanvasText(ctx, card.skyTitle, 450, 340, 720, 56);
 
-    ctx.fillStyle = '#F9A8D4';
-    ctx.font = 'bold 26px -apple-system, BlinkMacSystemFont, sans-serif';
-    ctx.fillText('Scaya — Английский с розовым дельфином Скаем', 450, 1020);
+    ctx.fillStyle = '#F5F2E6';
+    ctx.font = '700 34px -apple-system, BlinkMacSystemFont, sans-serif';
+    this.wrapCanvasText(ctx, `«${card.skyText}»`, 450, 540, 720, 48);
+
+    ctx.fillStyle = '#FFEE00';
+    ctx.font = '800 26px -apple-system, BlinkMacSystemFont, sans-serif';
+    ctx.fillText('Scaya • Английский с дельфином Скаем (A1 → C2)', 450, 1000);
 
     const link = document.createElement('a');
     link.download = `scaya-card-${card.id}.png`;
@@ -3516,9 +3540,15 @@ const ScayaApp = {
           </div>
         </div>
 
-        <button class="btn-primary-ocean full-width" onclick="ScayaApp.closeModal(); ScayaApp.startUnitLesson('${unit.id}')">
-          🌊 Начать урок
-        </button>
+        ${(this.session && this.session.active && this.session.unit && this.session.unit.id === unit.id) ? `
+          <button class="btn-primary-ocean full-width" onclick="ScayaApp.closeModal()">
+            Вернуться к заданию →
+          </button>
+        ` : `
+          <button class="btn-primary-ocean full-width" onclick="ScayaApp.closeModal(); ScayaApp.startUnitLesson('${unit.id}')">
+            🌊 Начать урок
+          </button>
+        `}
       </div>
     `;
   },

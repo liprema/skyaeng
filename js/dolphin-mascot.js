@@ -12,42 +12,42 @@ window.ScayaMascot = {
   species: "Дельфин Скай (Groovy Y2K)",
 
   portraits: {
-    sky_default: "img/sky_default.jpg?v=34",
-    sky_path_hero: "img/sky_path_hero.png?v=34",
-    sky_path_a1: "img/sky_path_hero.png?v=34",
-    sky_path_a2: "img/sky_path_a2.png?v=34",
-    sky_path_b1: "img/sky_path_b1.png?v=34",
-    sky_path_b2: "img/sky_path_b2.png?v=34",
-    sky_path_c1: "img/sky_path_c1.png?v=34",
-    sky_path_c2: "img/sky_path_c2.png?v=34",
-    sky_scholar: "img/sky_scholar.jpg?v=34",
-    sky_captain: "img/sky_captain.jpg?v=34",
-    sky_royal: "img/sky_royal.jpg?v=34",
-    sky_pirate: "img/sky_pirate.jpg?v=34",
+    sky_default: "img/sky_default.jpg?v=36",
+    sky_path_hero: "img/sky_path_hero.png?v=36",
+    sky_path_a1: "img/sky_path_hero.png?v=36",
+    sky_path_a2: "img/sky_path_a2.png?v=36",
+    sky_path_b1: "img/sky_path_b1.png?v=36",
+    sky_path_b2: "img/sky_path_b2.png?v=36",
+    sky_path_c1: "img/sky_path_c1.png?v=36",
+    sky_path_c2: "img/sky_path_c2.png?v=36",
+    sky_scholar: "img/sky_scholar.jpg?v=36",
+    sky_captain: "img/sky_captain.jpg?v=36",
+    sky_royal: "img/sky_royal.jpg?v=36",
+    sky_pirate: "img/sky_pirate.jpg?v=36",
 
-    shark_lulu: "img/shark_lulu.jpg?v=34",
-    friend_lulu: "img/shark_lulu.jpg?v=34",
-    lulu_ballerina: "img/lulu_ballerina.jpg?v=34",
-    lulu_sweater: "img/lulu_sweater.jpg?v=34",
+    shark_lulu: "img/shark_lulu.jpg?v=36",
+    friend_lulu: "img/shark_lulu.jpg?v=36",
+    lulu_ballerina: "img/lulu_ballerina.jpg?v=36",
+    lulu_sweater: "img/lulu_sweater.jpg?v=36",
 
-    mermaid_mira: "img/mermaid_mira.jpg?v=34",
-    friend_mira: "img/mermaid_mira.jpg?v=34",
-    mira_royal: "img/mira_royal.jpg?v=34",
-    mira_cozy: "img/mira_cozy.jpg?v=34",
+    mermaid_mira: "img/mermaid_mira.jpg?v=36",
+    friend_mira: "img/mermaid_mira.jpg?v=36",
+    mira_royal: "img/mira_royal.jpg?v=36",
+    mira_cozy: "img/mira_cozy.jpg?v=36",
 
-    jelly_blinky: "img/jelly_blinky.jpg?v=34",
-    friend_blinky: "img/jelly_blinky.jpg?v=34",
-    blinky_gentleman: "img/blinky_gentleman.jpg?v=34",
-    blinky_wizard: "img/blinky_wizard.jpg?v=34"
+    jelly_blinky: "img/jelly_blinky.jpg?v=36",
+    friend_blinky: "img/jelly_blinky.jpg?v=36",
+    blinky_gentleman: "img/blinky_gentleman.jpg?v=36",
+    blinky_wizard: "img/blinky_wizard.jpg?v=36"
   },
 
   storyIllustrations: {
-    story_1: "img/story_1.jpg?v=34",
-    story_2: "img/story_2.jpg?v=34",
-    story_3: "img/story_3.jpg?v=34",
-    story_4: "img/story_4.jpg?v=34",
-    story_5: "img/story_5.jpg?v=34",
-    story_6: "img/story_6.jpg?v=34"
+    story_1: "img/story_1.jpg?v=36",
+    story_2: "img/story_2.jpg?v=36",
+    story_3: "img/story_3.jpg?v=36",
+    story_4: "img/story_4.jpg?v=36",
+    story_5: "img/story_5.jpg?v=36",
+    story_6: "img/story_6.jpg?v=36"
   },
 
   watercolorBgs: {
@@ -772,16 +772,19 @@ window.ScayaMascot = {
   },
 
   // Минималистичные сюжетные иллюстрации историй на чистом кремовом фоне #F5F2E6
+  resolveStoryKey(storyId = "story_1") {
+    const sid = String(storyId || "story_1");
+    if (this.storyIllustrations[sid]) return sid;
+    if (sid.includes("_a2_")) return "story_4";
+    if (sid.includes("_b1_")) return "story_2";
+    if (sid.includes("_b2_")) return "story_5";
+    if (sid.includes("_c1_")) return "story_3";
+    if (sid.includes("_c2_")) return "story_6";
+    return "story_1";
+  },
+
   renderStoryIllustration(storyId = "story_1", size = 96, isBanner = false) {
-    const mapId = {
-      unit_a1_01: "story_1",
-      unit_a2_01: "story_4",
-      unit_b1_01: "story_2",
-      unit_b2_01: "story_5",
-      unit_c1_01: "story_3",
-      unit_c2_01: "story_6"
-    };
-    const key = this.storyIllustrations[storyId] ? storyId : (mapId[storyId] || "story_1");
+    const key = this.resolveStoryKey(storyId);
     const imgSrc = this.storyIllustrations[key] || this.storyIllustrations.story_1;
     if (isBanner) {
       return `
@@ -800,6 +803,7 @@ window.ScayaMascot = {
 
   // Дополнительные сюжетные карточки с картинками внутри интерактивных историй и чтения в уроках
   renderReadingInlineScene(contextId = "story_1", sceneIndex = 0) {
+    const resolvedId = this.resolveStoryKey(contextId);
     const storyScenesMap = {
       story_1: [
         { leftImg: this.portraits.shark_lulu, rightImg: this.portraits.sky_default, badge: "SCENE 02 • LULU & SKY", caption: "Лулу и Скай ищут пропавший розовый бантик среди кораллов" },
@@ -827,7 +831,7 @@ window.ScayaMascot = {
       ]
     };
 
-    const list = storyScenesMap[contextId] || storyScenesMap.story_1;
+    const list = storyScenesMap[resolvedId] || storyScenesMap.story_1;
     const item = list[sceneIndex % list.length];
     return `
       <div class="groovy-inline-reading-scene">
@@ -924,66 +928,35 @@ window.ScayaMascot = {
     if (this._cacheInitialized) return;
     this._cacheInitialized = true;
     window._SCAYA_KEEPALIVE_IMGS = window._SCAYA_KEEPALIVE_IMGS || [];
-    window._SCAYA_BLOB_MAP = window._SCAYA_BLOB_MAP || {};
+    const seenUrls = new Set();
 
     const keepDecoded = (src) => {
-      if (!src) return;
+      if (!src || seenUrls.has(src)) return;
+      seenUrls.add(src);
       const im = new Image();
-      im.decoding = "sync";
+      im.decoding = "async";
       im.src = src;
       if (im.decode) im.decode().catch(() => {});
       window._SCAYA_KEEPALIVE_IMGS.push(im);
     };
 
-    const allTargets = [];
-    Object.keys(this.portraits || {}).forEach(k => {
-      const val = this.portraits[k];
-      if (val && val.startsWith("data:")) {
-        keepDecoded(val);
-      } else if (val) {
-        allTargets.push({ dict: this.portraits, key: k, url: val });
-      }
+    const allUrls = [];
+    Object.values(this.portraits || {}).forEach(val => {
+      if (val && !seenUrls.has(val)) allUrls.push(val);
     });
-    Object.keys(this.storyIllustrations || {}).forEach(k => {
-      const val = this.storyIllustrations[k];
-      if (val && val.startsWith("data:")) {
-        keepDecoded(val);
-      } else if (val) {
-        allTargets.push({ dict: this.storyIllustrations, key: k, url: val });
-      }
+    Object.values(this.storyIllustrations || {}).forEach(val => {
+      if (val && !seenUrls.has(val)) allUrls.push(val);
     });
 
-    // Последовательно-параллельная подгрузка по 2 файла в фоне, чтобы не забивать SSH-туннель
     let idx = 0;
     const worker = () => {
-      if (idx >= allTargets.length) return;
-      const item = allTargets[idx++];
-      if (window._SCAYA_BLOB_MAP[item.url]) {
-        item.dict[item.key] = window._SCAYA_BLOB_MAP[item.url];
-        worker();
-        return;
-      }
-      fetch(item.url, { cache: "force-cache" })
-        .then(r => (r.ok ? r.blob() : null))
-        .then(blob => {
-          if (blob) {
-            const bUrl = URL.createObjectURL(blob);
-            window._SCAYA_BLOB_MAP[item.url] = bUrl;
-            item.dict[item.key] = bUrl;
-            keepDecoded(bUrl);
-            document.querySelectorAll(`img[src="${item.url}"]`).forEach(el => {
-              el.src = bUrl;
-            });
-          }
-        })
-        .catch(() => {})
-        .finally(() => {
-          setTimeout(worker, 15);
-        });
+      if (idx >= allUrls.length) return;
+      const url = allUrls[idx++];
+      keepDecoded(url);
+      setTimeout(worker, 20);
     };
 
     setTimeout(() => {
-      worker();
       worker();
       worker();
     }, 60);

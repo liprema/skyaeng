@@ -15686,9 +15686,42 @@ window.ScayaWordDictionary = {
   function makeBlankSentence(example, targetWord) {
     const cleanTarget = String(targetWord || "").trim();
     if (!example || !cleanTarget) return `Choose the best word: “___”`;
-    const re = new RegExp("\\b" + cleanTarget.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i");
-    if (re.test(example)) {
-      return example.replace(re, "___");
+    const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    // 1. Точное совпадение и базовые окончания (-s, -es, -d, -ed, -ing, -er, -ers)
+    const reDirect = new RegExp("\\b" + esc(cleanTarget) + "(s|es|d|ed|ing|er|ers)?\\b", "i");
+    if (reDirect.test(example)) {
+      return example.replace(reDirect, "___");
+    }
+    // 2. Окончание на -y -> -ies / -ied / -ying (hurry -> hurries, amenity -> amenities)
+    if (/y$/i.test(cleanTarget) && cleanTarget.length > 2) {
+      const stemY = esc(cleanTarget.slice(0, -1));
+      const reY = new RegExp("\\b" + stemY + "(y|ies|ied|ying)\\b", "i");
+      if (reY.test(example)) {
+        return example.replace(reY, "___");
+      }
+    }
+    // 3. Окончание на -e -> -ing / -ed / -es (make -> making, inspire -> inspiring)
+    if (/e$/i.test(cleanTarget) && cleanTarget.length > 2) {
+      const stemE = esc(cleanTarget.slice(0, -1));
+      const reE = new RegExp("\\b" + stemE + "(e|es|ed|ing|er|ers)\\b", "i");
+      if (reE.test(example)) {
+        return example.replace(reE, "___");
+      }
+    }
+    // 4. Окончание на -us -> -i (stimulus -> stimuli) или удвоение согласной (plan -> planned/planning)
+    if (/us$/i.test(cleanTarget) && cleanTarget.length > 3) {
+      const stemUs = esc(cleanTarget.slice(0, -2));
+      const reUs = new RegExp("\\b" + stemUs + "(us|i)\\b", "i");
+      if (reUs.test(example)) {
+        return example.replace(reUs, "___");
+      }
+    }
+    if (cleanTarget.length >= 3) {
+      const stem4 = esc(cleanTarget.slice(0, Math.max(3, cleanTarget.length - 1)));
+      const reStem = new RegExp("\\b" + stem4 + "[a-z']*\\b", "i");
+      if (reStem.test(example)) {
+        return example.replace(reStem, "___");
+      }
     }
     return `${example} (ключевое слово: ___)`;
   }
