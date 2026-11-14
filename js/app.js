@@ -276,6 +276,21 @@ const ScayaApp = {
   },
 
   _speakingTimer: null,
+  _speechRecInstance: null,
+
+  computeSpeechSimilarity(spoken, target) {
+    const clean = s => String(s || '').toLowerCase().replace(/[^a-z0-9\s']/g, '').trim().split(/\s+/).filter(Boolean);
+    const tWords = clean(target);
+    const sWords = clean(spoken);
+    if (!tWords.length || !sWords.length) return 0;
+    let matched = 0;
+    tWords.forEach(tw => {
+      if (sWords.some(sw => sw === tw || (tw.length > 3 && (sw.startsWith(tw.slice(0, 3)) || tw.startsWith(sw.slice(0, 3)))))) {
+        matched++;
+      }
+    });
+    return Math.min(100, Math.round((matched / tWords.length) * 100));
+  },
 
   startSpeakingMic(targetPhrase, expectedCorrect) {
     if (this.session.checked) {
@@ -288,7 +303,11 @@ const ScayaApp = {
 
     // Если запись уже идёт — повторное нажатие мгновенно отправляет голосовое и открывает переход дальше!
     if (this.session.isListeningMic) {
-      this.finishSpeakingVoiceSend(targetPhrase, expectedCorrect);
+      if (this._speechRecInstance) {
+        try { this._speechRecInstance.stop(); } catch (e) {}
+        this._speechRecInstance = null;
+      }
+      this.finishSpeakingVoiceSend(this.session.speechRecognizedText || targetPhrase, expectedCorrect);
       return;
     }
 
@@ -298,24 +317,81 @@ const ScayaApp = {
     }
 
     this.session.isListeningMic = true;
+    this.session.speechRecognizedText = '';
+    this.session.speechMatchPct = 0;
     this.playTone('tap');
     this.renderLessonOverlay();
 
-    // Автоматическое завершение записи через 2.4 сек, если пользователь просто произнёс фразу и ждёт
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRec) {
+      try {
+        const rec = new SpeechRec();
+        this._speechRecInstance = rec;
+        rec.lang = 'en-US';
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
+
+        rec.onresult = (event) => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript + ' ';
+          }
+          transcript = transcript.trim();
+          if (transcript && this.session && this.session.active) {
+            this.session.speechRecognizedText = transcript;
+            this.session.speechMatchPct = this.computeSpeechSimilarity(transcript, targetPhrase);
+            this.renderLessonOverlay();
+            if (event.results[event.results.length - 1].isFinal && this.session.speechMatchPct >= 50) {
+              try { rec.stop(); } catch (e) {}
+              this._speechRecInstance = null;
+              this.finishSpeakingVoiceSend(transcript, expectedCorrect);
+            }
+          }
+        };
+
+        rec.onerror = () => {
+          this._speechRecInstance = null;
+        };
+
+        rec.onend = () => {
+          this._speechRecInstance = null;
+          if (this.session && this.session.active && this.session.isListeningMic) {
+            this.finishSpeakingVoiceSend(this.session.speechRecognizedText || targetPhrase, expectedCorrect);
+          }
+        };
+
+        rec.start();
+      } catch (e) {
+        this._speechRecInstance = null;
+      }
+    }
+
+    // Страховочный таймер (3.2 сек), если микрофон недоступен в встроенном браузере
     this._speakingTimer = setTimeout(() => {
       if (this.session && this.session.active && this.session.isListeningMic) {
-        this.finishSpeakingVoiceSend(targetPhrase, expectedCorrect);
+        if (this._speechRecInstance) {
+          try { this._speechRecInstance.stop(); } catch (e) {}
+          this._speechRecInstance = null;
+        }
+        this.finishSpeakingVoiceSend(this.session.speechRecognizedText || targetPhrase, expectedCorrect);
       }
-    }, 2400);
+    }, 3200);
   },
 
-  finishSpeakingVoiceSend(targetPhrase, expectedCorrect) {
+  finishSpeakingVoiceSend(recognizedOrTarget, expectedCorrect) {
     if (this._speakingTimer) {
       clearTimeout(this._speakingTimer);
       this._speakingTimer = null;
     }
+    if (this._speechRecInstance) {
+      try { this._speechRecInstance.stop(); } catch (e) {}
+      this._speechRecInstance = null;
+    }
+    const ex = this.session && this.session.exercises && this.session.exercises[this.session.currentIndex];
+    const targetPhrase = (ex && (ex.targetPhrase || ex.correct)) || expectedCorrect || recognizedOrTarget;
     this.session.isListeningMic = false;
-    this.session.speechRecognizedText = targetPhrase;
+    this.session.speechRecognizedText = recognizedOrTarget || targetPhrase;
+    this.session.speechMatchPct = this.computeSpeechSimilarity(this.session.speechRecognizedText, targetPhrase) || 100;
     this.session.selectedAnswer = expectedCorrect || targetPhrase;
     if (!this.session.checked) {
       this.checkCurrentExercise();
@@ -1143,15 +1219,24 @@ const ScayaApp = {
     if (this.state.stats.hearts <= 0) {
       this.state.stats.hearts = 5;
     }
-    const questions = window.ScayaCurriculum.placementQuestions.map((q, idx) => ({
+    const rawPool = window.ScayaCurriculum.placementQuestions || [];
+    const cefrOrder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+    const picked = [];
+    cefrOrder.forEach(lvl => {
+      const ofLvl = rawPool.filter(q => q.cefr === lvl).sort(() => Math.random() - 0.5);
+      picked.push(...ofLvl.slice(0, 2));
+    });
+    const finalPool = picked.length >= 10 ? picked : rawPool.slice(0, 12);
+    const questions = finalPool.map((q, idx) => ({
       id: q.id,
       type: 'multiple_choice',
-      badge: `Вопрос ${idx + 1} из ${window.ScayaCurriculum.placementQuestions.length}`,
+      badge: `Вопрос ${idx + 1} из ${finalPool.length} • Уровень ${q.cefr}`,
       prompt: q.prompt,
-      options: q.options,
+      options: [...q.options].sort(() => Math.random() - 0.5),
       correct: q.correct,
       explanation: q.explanation,
       cefr: q.cefr,
+      skillTag: q.skillTag || (q.cefr === 'A1' || q.cefr === 'A2' ? 'Базовая грамматика и предлоги' : q.cefr === 'B1' || q.cefr === 'B2' ? 'Времена и фразовые глаголы' : 'Инверсия и стиль C1–C2'),
       zoneId: q.zoneId
     }));
 
@@ -1687,6 +1772,8 @@ const ScayaApp = {
     } else if (ex.type === 'speaking' || ex.type === 'speaking_pronunciation') {
       const phrase = ex.targetPhrase || ex.correct;
       const isSpokenReady = Boolean(this.session.selectedAnswer);
+      const recText = this.session.speechRecognizedText || '';
+      const matchPct = this.session.speechMatchPct || 0;
       exerciseBodyHTML = `
         <div class="duolingo-task-instruction">Произнеси эту фразу вслух</div>
         ${this.renderWordTooltipBanner()}
@@ -1699,12 +1786,19 @@ const ScayaApp = {
             </button>
           </div>
 
+          ${recText ? `
+            <div class="murphy-rule-card" style="margin: 8px 0; text-align: center; background: #FFFDF7;">
+              <div class="murphy-rule-label">🎙 Распознано микрофоном (${matchPct}% совпадение):</div>
+              <div style="font-weight: 800; color: #0D7A22; font-size: 15px;">“${recText}”</div>
+            </div>
+          ` : ''}
+
           <div class="speaking-actions-area">
             <button class="btn-mic-record ${this.session.isListeningMic ? 'recording' : ''} ${isSpokenReady ? 'recorded-ok' : ''}"
               onclick="ScayaApp.startSpeakingMic(${JSON.stringify(phrase).replace(/"/g, '&quot;')}, ${JSON.stringify(ex.correct).replace(/"/g, '&quot;')})">
               <span class="mic-icon">${this.session.isListeningMic ? '●' : isSpokenReady ? '✓' : '🎙'}</span>
               <span>${this.session.isListeningMic
-                ? 'Говори... Нажми, чтобы отправить голосовое'
+                ? 'Слушаю твой голос... Нажми, чтобы отправить'
                 : isSpokenReady
                   ? 'Голосовое принято! Нажми, чтобы идти дальше →'
                   : 'Нажми и произнеси фразу'}</span>
@@ -1961,24 +2055,36 @@ const ScayaApp = {
     this.renderLessonOverlay();
   },
 
-  calculateAccuratePlacementLevel(correctCount) {
+  calculateAccuratePlacementLevel(correctCount, totalCount = 12) {
     const firstOfZone = (zid, fallback) => {
       const found = (window.ScayaCurriculum && window.ScayaCurriculum.units || []).find(u => u.zoneId === zid);
       return found ? found.id : fallback;
     };
-    if (correctCount <= 2) {
+    const ratio = totalCount > 0 ? correctCount / totalCount : 0;
+    if (ratio <= 0.22) {
       return { cefr: 'A1', zoneId: 'lagoon_a1', startUnitId: firstOfZone('lagoon_a1', 'unit_a1_01') };
-    } else if (correctCount <= 4) {
+    } else if (ratio <= 0.42) {
       return { cefr: 'A2', zoneId: 'shallows_a2', startUnitId: firstOfZone('shallows_a2', 'unit_a2_11') };
-    } else if (correctCount <= 6) {
+    } else if (ratio <= 0.62) {
       return { cefr: 'B1', zoneId: 'reef_b1', startUnitId: firstOfZone('reef_b1', 'unit_b1_21') };
-    } else if (correctCount <= 8) {
+    } else if (ratio <= 0.80) {
       return { cefr: 'B2', zoneId: 'ocean_b2', startUnitId: firstOfZone('ocean_b2', 'unit_b2_31') };
-    } else if (correctCount === 9) {
-      return { cefr: 'C1', zoneId: 'trench_c1', startUnitId: firstOfZone('trench_c1', 'unit_c1_41') };
+    } else if (ratio <= 0.92) {
+      return { cefr: 'C1', zoneId: 'twilight_c1', startUnitId: firstOfZone('twilight_c1', 'unit_c1_41') };
     } else {
-      return { cefr: 'C2', zoneId: 'atlantis_c2', startUnitId: firstOfZone('atlantis_c2', 'unit_c2_51') };
+      return { cefr: 'C2', zoneId: 'abyss_c2', startUnitId: firstOfZone('abyss_c2', 'unit_c2_51') };
     }
+  },
+
+  recordDailyXp(amount = 0) {
+    try {
+      if (!amount || amount <= 0) return;
+      const today = new Date().toISOString().slice(0, 10);
+      if (!this.state.stats.dailyXpByDate || typeof this.state.stats.dailyXpByDate !== 'object') {
+        this.state.stats.dailyXpByDate = {};
+      }
+      this.state.stats.dailyXpByDate[today] = (this.state.stats.dailyXpByDate[today] || 0) + amount;
+    } catch (e) {}
   },
 
   addUnitVocabToFlashcards(unit) {
@@ -2017,7 +2123,7 @@ const ScayaApp = {
     this.session.newlyAddedCardsCount = 0;
 
     if (this.session.mode === 'placement') {
-      const result = this.calculateAccuratePlacementLevel(this.session.correctCount);
+      const result = this.calculateAccuratePlacementLevel(this.session.correctCount, total);
       this.state.user.detectedLevel = result.cefr;
       this.state.user.currentZoneId = result.zoneId;
       this.state.user.onboardingDone = true;
@@ -2106,6 +2212,9 @@ const ScayaApp = {
       this.state.stats.pearls += 25;
     }
 
+    const xpEarnedNow = this.session.mode === 'placement' ? 50 : this.session.mode === 'skip_jump' ? 45 : this.session.mode === 'mistakes_review' ? 25 : 35;
+    this.recordDailyXp(xpEarnedNow);
+
     // Обновление ежедневной ударной серии (Streak) при завершении урока
     try {
       const today = new Date().toISOString().slice(0, 10);
@@ -2166,7 +2275,7 @@ const ScayaApp = {
 
           <div class="groovy-victory-subtitle">
             ${isPlacement
-              ? `Верных ответов: ${this.session.correctCount} из ${total}. Открыта вся программа ${currentLevel}!`
+              ? `Верных ответов: ${this.session.correctCount} из ${total}. Открыта вся программа ${currentLevel} (Артикли • Времена • Фразовые глаголы • Словообразование)!`
               : stepTitle}
           </div>
 
@@ -2213,13 +2322,241 @@ const ScayaApp = {
   getFilteredFlashcards() {
     const cards = this.state.flashcards || [];
     const now = Date.now();
+    let baseList = cards;
     if (this.flashcardSession.filterMode === 'due') {
       const due = cards.filter(c => (c.nextReviewAt || 0) <= now);
-      return due.length > 0 ? due : cards;
+      baseList = due.length > 0 ? due : cards;
     } else if (this.flashcardSession.filterMode === 'custom') {
-      return cards.filter(c => c.isCustom);
+      baseList = cards.filter(c => c.isCustom);
     }
-    return cards;
+    const q = String(this.flashcardSession.searchQuery || '').trim().toLowerCase();
+    if (q) {
+      return baseList.filter(c =>
+        String(c.en || '').toLowerCase().includes(q) ||
+        String(c.ru || '').toLowerCase().includes(q)
+      );
+    }
+    return baseList;
+  },
+
+  setFlashcardSearch(val) {
+    this.flashcardSession.searchQuery = val || '';
+    this.renderAll();
+  },
+
+  loadZoneVocabularyToFlashcards(cefr = 'A1') {
+    const zones = window.ScayaCurriculum.oceanZones || [];
+    const zone = zones.find(z => z.cefr === cefr) || zones[0];
+    if (!zone) return;
+    const baseUnits = (window.ScayaCurriculum.units || []).filter(u => u.zoneId === zone.id && u.nodeType === 'vocab');
+    let added = 0;
+    baseUnits.forEach(u => {
+      added += this.addUnitVocabToFlashcards(u);
+    });
+    window.ScayaCloud.saveState(this.state);
+    this.playTone('win');
+    this.renderAll();
+    if (added > 0) {
+      this.showToast(`📚 В колоду добавлено +${added} новых слов уровня ${cefr}!`);
+    } else {
+      this.showToast(`Все слова уровня ${cefr} уже есть в твоей колоде!`);
+    }
+  },
+
+  startFlashcardQuizLesson() {
+    const pool = this.getFilteredFlashcards();
+    const cards = pool.length >= 4 ? pool : (this.state.flashcards || []);
+    if (!cards.length) {
+      this.showToast('Сначала добавь слова в колоду!');
+      return;
+    }
+    const sample = [...cards].sort(() => Math.random() - 0.5).slice(0, 8);
+    const allUnits = window.ScayaCurriculum.units || [];
+    const fallbackPool = [
+      { en: 'Opportunity', ru: 'Возможность' },
+      { en: 'Inspire', ru: 'Вдохновлять' },
+      { en: 'Schedule', ru: 'Расписание' },
+      { en: 'Discover', ru: 'Открывать, обнаруживать' },
+      { en: 'Preserve', ru: 'Бережно сохранять' }
+    ];
+    const exercises = sample.map((c, idx) => {
+      const otherCards = cards.filter(x => x.id !== c.id).concat(fallbackPool);
+      if (idx % 2 === 0) {
+        const distRu = otherCards.map(x => x.ru).filter(Boolean).slice(0, 3);
+        const opts = [c.ru, ...distRu].filter((v, i, a) => a.indexOf(v) === i).sort(() => Math.random() - 0.5);
+        return {
+          id: `fc_quiz_${idx}`,
+          type: 'multiple_choice',
+          badge: `Блиц по карточкам • ${idx + 1}/${sample.length}`,
+          prompt: `Как переводится слово «${c.en}»?\n${c.example ? `Пример: “${c.example}”` : ''}`,
+          options: opts,
+          correct: c.ru,
+          explanation: `«${c.en}» переводится как «${c.ru}».`
+        };
+      } else {
+        const distEn = otherCards.map(x => x.en).filter(Boolean).slice(0, 3);
+        const opts = [c.en, ...distEn].filter((v, i, a) => a.indexOf(v) === i).sort(() => Math.random() - 0.5);
+        return {
+          id: `fc_quiz_${idx}`,
+          type: 'multiple_choice',
+          badge: `Блиц по карточкам • ${idx + 1}/${sample.length}`,
+          prompt: `Какое английское слово или выражение означает «${c.ru}»?`,
+          options: opts,
+          correct: c.en,
+          explanation: `Правильный ответ: «${c.en}» (${c.ru}).`
+        };
+      }
+    });
+
+    this.session = {
+      active: true,
+      mode: 'mistakes_review',
+      readingStage: false,
+      showReadingTranslation: false,
+      unit: allUnits[0] || { id: 'cards_blitz', titleRu: 'Блиц-тест по карточкам', icon: '⚡' },
+      exercises,
+      currentIndex: 0,
+      selectedAnswer: null,
+      assembledWords: [],
+      availableWords: [],
+      speechRecognizedText: '',
+      isListeningMic: false,
+      checked: false,
+      isCorrect: false,
+      correctCount: 0,
+      heartLostThisTurn: false,
+      newlyAddedCardsCount: 0
+    };
+    this.prepareCurrentExercise();
+    this.renderLessonOverlay();
+  },
+
+  openIrregularVerbsModal() {
+    const verbs = window.ScayaCurriculum.irregularVerbs || [];
+    const modal = document.getElementById('scaya-modal-overlay');
+    if (!modal) return;
+    const groups = {};
+    verbs.forEach(v => {
+      if (!groups[v.group]) groups[v.group] = [];
+      groups[v.group].push(v);
+    });
+    modal.classList.remove('hidden');
+    modal.innerHTML = `
+      <div class="scaya-modal-sheet">
+        <div class="modal-sheet-header">
+          <div>
+            <span class="sheet-kicker">СПРАВОЧНИК + ТРЕНАЖЁР • ПО РИФМАМ</span>
+            <h3 class="sheet-title">🔥 Неправильные глаголы (V1 – V2 – V3)</h3>
+          </div>
+          <button class="btn-close-modal" onclick="ScayaApp.closeModal()">✕</button>
+        </div>
+
+        <div class="theory-scroll-body">
+          ${Object.keys(groups).map(gName => `
+            <div class="murphy-rule-card">
+              <div class="murphy-rule-label">${gName}</div>
+              <div class="syllabus-vocab-list">
+                ${groups[gName].map(v => `
+                  <div class="syllabus-vocab-row">
+                    <div>
+                      <strong>${v.v1} — ${v.v2} — ${v.v3}</strong> — <span>${v.ru}</span>
+                      <div class="syllabus-vocab-ex">“${v.ex}”</div>
+                    </div>
+                    <button class="btn-audio-mini" onclick="ScayaApp.speakEnglish(${JSON.stringify(`${v.v1}, ${v.v2.replace(/\s*\[.*\]/, '')}, ${v.v3.replace(/\s*\[.*\]/, '')}`).replace(/"/g, '&quot;')})">🔊</button>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <button class="btn-primary-ocean full-width" onclick="ScayaApp.closeModal(); ScayaApp.startIrregularVerbsQuiz()">
+          ⚡ Запустить тренажёр по формам V2 / V3
+        </button>
+      </div>
+    `;
+  },
+
+  startIrregularVerbsQuiz() {
+    const verbs = [...(window.ScayaCurriculum.irregularVerbs || [])].sort(() => Math.random() - 0.5).slice(0, 8);
+    if (!verbs.length) return;
+    const exercises = verbs.map((v, idx) => {
+      const cleanV2 = v.v2.replace(/\s*\[.*\]/, '');
+      const cleanV3 = v.v3.replace(/\s*\[.*\]/, '');
+      const correctPair = `${cleanV2} — ${cleanV3}`;
+      const distractors = [
+        `${v.v1}ed — ${v.v1}ed`,
+        `${cleanV3} — ${ v.v1 }`,
+        `${v.v1} — ${cleanV2}en`
+      ].filter(d => d !== correctPair);
+      const opts = [correctPair, ...distractors].sort(() => Math.random() - 0.5);
+      return {
+        id: `irreg_${idx}`,
+        type: 'multiple_choice',
+        badge: `Неправильные глаголы • ${idx + 1}/${verbs.length}`,
+        prompt: `Выбери правильные 2-ю и 3-ю формы (V2 — V3) глагола «${v.v1}» (${v.ru}):\nПример: “${v.ex}”`,
+        options: opts,
+        correct: correctPair,
+        explanation: `Три формы глагола «${v.v1}» (${v.ru}): ${v.v1} — ${v.v2} — ${v.v3}.`
+      };
+    });
+
+    this.session = {
+      active: true,
+      mode: 'mistakes_review',
+      readingStage: false,
+      showReadingTranslation: false,
+      unit: { id: 'irreg_verbs_quiz', titleRu: 'Тренажёр неправильных глаголов', icon: '🔥' },
+      exercises,
+      currentIndex: 0,
+      selectedAnswer: null,
+      assembledWords: [],
+      availableWords: [],
+      speechRecognizedText: '',
+      isListeningMic: false,
+      checked: false,
+      isCorrect: false,
+      correctCount: 0,
+      heartLostThisTurn: false,
+      newlyAddedCardsCount: 0
+    };
+    this.prepareCurrentExercise();
+    this.renderLessonOverlay();
+  },
+
+  openTwelveTensesModal() {
+    const tenses = window.ScayaCurriculum.twelveTensesMatrix || [];
+    const modal = document.getElementById('scaya-modal-overlay');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.innerHTML = `
+      <div class="scaya-modal-sheet">
+        <div class="modal-sheet-header">
+          <div>
+            <span class="sheet-kicker">СИСТЕМА ВРЕМЁН АНГЛИЙСКОГО • A1 → C2</span>
+            <h3 class="sheet-title">🧭 Шпаргалка всех 12 времён</h3>
+          </div>
+          <button class="btn-close-modal" onclick="ScayaApp.closeModal()">✕</button>
+        </div>
+
+        <div class="theory-scroll-body">
+          ${tenses.map(t => `
+            <div class="murphy-rule-card">
+              <div class="murphy-rule-label">${t.tense} (${t.level}) • Формула: ${t.formula}</div>
+              <div class="murphy-rule-example">
+                <span>“${t.ex}”</span>
+                <button class="btn-audio-mini" onclick="ScayaApp.speakEnglish(${JSON.stringify(t.ex).replace(/"/g, '&quot;')})">🔊</button>
+              </div>
+              <div class="murphy-rule-note"><strong>Когда использовать:</strong> ${t.ru}<br/><strong>Маркеры:</strong> ${t.marker}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <button class="btn-primary-ocean full-width" onclick="ScayaApp.closeModal(); ScayaApp.startLevelTrapsLesson()">
+          🎯 Тренировать времена и ловушки в тесте
+        </button>
+      </div>
+    `;
   },
 
   formatNextReviewBadge(card) {
@@ -2352,11 +2689,39 @@ const ScayaApp = {
         `}
       </div>
 
+      <!-- БЛОК БЫСТРЫХ ТРЕНАЖЁРОВ И СЛОВАРЕЙ УРОВНЕЙ В CARDS -->
+      <div class="shop-quick-links" style="margin-bottom: 10px;">
+        <button class="btn-primary-ocean" onclick="ScayaApp.startFlashcardQuizLesson()">
+          ⚡ Блиц-тест по карточкам
+        </button>
+        <button class="btn-secondary-ocean" onclick="ScayaApp.openIrregularVerbsModal()">
+          🔥 Неправильные глаголы
+        </button>
+        <button class="btn-secondary-ocean" onclick="ScayaApp.openTwelveTensesModal()">
+          🧭 12 времён
+        </button>
+      </div>
+
+      <div class="wardrobe-char-pills" style="margin-bottom: 12px;">
+        ${['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(lvl => `
+          <button class="wardrobe-char-pill" onclick="ScayaApp.loadZoneVocabularyToFlashcards('${lvl}')">+ Словарь ${lvl}</button>
+        `).join('')}
+      </div>
+
       <!-- БЛОК 2: ЕДИНЫЙ АККУРАТНЫЙ КОНТЕЙНЕР КОЛОДЫ С 2-КОЛОНОЧНОЙ СЕТКОЙ КАРТОЧЕК -->
       <div class="groovy-deck-container-card">
         <div class="groovy-deck-header-row">
           <h4 class="groovy-deck-title">Словарь колоды</h4>
           <span class="groovy-deck-badge">${filtered.length} шт.</span>
+        </div>
+        <div style="margin-bottom: 10px;">
+          <input
+            type="text"
+            class="scaya-input"
+            placeholder="🔍 Поиск слова или перевода в колоде..."
+            value="${(this.flashcardSession.searchQuery || '').replace(/"/g, '&quot;')}"
+            oninput="ScayaApp.setFlashcardSearch(this.value)"
+          />
         </div>
         <div class="groovy-deck-grid-2col">
           ${filtered.map(c => `
@@ -2466,6 +2831,7 @@ const ScayaApp = {
       card.intervalDays = nextDays;
       card.nextReviewAt = Date.now() + nextDays * DAY_MS;
       this.state.stats.xp += 5;
+      this.recordDailyXp(5);
       this.playTone('correct');
       this.showToast(`Отлично! В следующий раз покажем через ${nextDays} дн. (+5 XP)`);
     } else if (rating === 'easy') {
@@ -2474,6 +2840,7 @@ const ScayaApp = {
       card.intervalDays = nextDays;
       card.nextReviewAt = Date.now() + nextDays * DAY_MS;
       this.state.stats.xp += 10;
+      this.recordDailyXp(10);
       this.state.stats.pearls += 5;
       this.playTone('win');
       this.showToast(`Супер! Покажем только через ${nextDays} дн. (+10 XP, +5 ракушек)`);
@@ -3240,10 +3607,82 @@ const ScayaApp = {
         <div class="empty-mistakes-card">
           ${window.ScayaMascot.renderSVG('proud', this.state.user.avatarOutfit, 108)}
           <h3>Ни одной ошибки! ✨</h3>
-          <p>Твой океан чист! Розовый дельфин Скай невероятно тобой гордится.</p>
+          <p>Твой океан чист! Но ты в любой момент можешь запустить интенсив по самым коварным ловушкам своего уровня (${this.state.user.detectedLevel || 'A1'}).</p>
+          <div class="shop-quick-links" style="margin-top: 12px;">
+            <button class="btn-primary-ocean full-width" onclick="ScayaApp.startLevelTrapsLesson()">
+              🎯 Тренировать 10 коварных ловушек уровня ${this.state.user.detectedLevel || 'A1'}
+            </button>
+          </div>
         </div>
       `}
+      <div class="shop-quick-links" style="margin-top: 12px;">
+        <button class="btn-secondary-ocean" onclick="ScayaApp.startLevelTrapsLesson()">
+          🎯 Интенсив по ловушкам (${this.state.user.detectedLevel || 'A1'})
+        </button>
+        <button class="btn-secondary-ocean" onclick="ScayaApp.openTwelveTensesModal()">
+          🧭 Таблица 12 времён
+        </button>
+      </div>
     `;
+  },
+
+  startLevelTrapsLesson() {
+    const zId = (this.state.user && this.state.user.currentZoneId) || 'lagoon_a1';
+    const drillsMap = window.ScayaCurriculum.grammarDrillsByZone || {};
+    const transformsMap = window.ScayaCurriculum.cambridgeTransformsByZone || {};
+    const drills = drillsMap[zId] || drillsMap.lagoon_a1 || [];
+    const transforms = transformsMap[zId] || transformsMap.lagoon_a1 || [];
+    const exercises = [];
+
+    drills.forEach((d, idx) => {
+      exercises.push({
+        id: `trap_mc_${idx}`,
+        type: 'multiple_choice',
+        badge: `Ловушка • ${d.topic}`,
+        prompt: d.prompt,
+        options: [...d.options].sort(() => Math.random() - 0.5),
+        correct: d.correct,
+        explanation: d.explanation
+      });
+    });
+
+    transforms.forEach((tr, idx) => {
+      exercises.push({
+        id: `trap_tr_${idx}`,
+        type: 'cambridge_transform',
+        badge: `Cambridge Transform • ${tr.keyWord}`,
+        keyWord: tr.keyWord,
+        originalSentence: tr.originalSentence,
+        templateBefore: tr.templateBefore,
+        templateAfter: tr.templateAfter,
+        options: [...tr.options].sort(() => Math.random() - 0.5),
+        correct: tr.correct,
+        explanation: tr.explanation
+      });
+    });
+
+    if (!exercises.length) return;
+    this.session = {
+      active: true,
+      mode: 'mistakes_review',
+      readingStage: false,
+      showReadingTranslation: false,
+      unit: { id: 'level_traps_workout', titleRu: `Интенсив по ловушкам (${this.state.user.detectedLevel || 'A1'})`, icon: '🎯' },
+      exercises: exercises.slice(0, 10),
+      currentIndex: 0,
+      selectedAnswer: null,
+      assembledWords: [],
+      availableWords: [],
+      speechRecognizedText: '',
+      isListeningMic: false,
+      checked: false,
+      isCorrect: false,
+      correctCount: 0,
+      heartLostThisTurn: false,
+      newlyAddedCardsCount: 0
+    };
+    this.prepareCurrentExercise();
+    this.renderLessonOverlay();
   },
 
   // --------------------------------------------------------------------------
@@ -3297,33 +3736,36 @@ const ScayaApp = {
             </div>
           </div>
 
-          <!-- 6-столбчатый разноцветный график недели Mo Tu We Th Fr Sa (как в app_ui_groovy_concept.jpg) -->
+          <!-- 7-столбчатый живой график недели Mo..Su с привязкой к реальному опыту за день -->
           <div class="groovy-weekly-chart-box">
             <div class="groovy-bars-row">
-              <div class="groovy-bar-col">
-                <div class="groovy-bar" style="height:44px;background:#1E6BFF;"></div>
-                <span class="groovy-bar-day">Mo</span>
-              </div>
-              <div class="groovy-bar-col">
-                <div class="groovy-bar" style="height:64px;background:#FF6FB5;"></div>
-                <span class="groovy-bar-day">Tu</span>
-              </div>
-              <div class="groovy-bar-col">
-                <div class="groovy-bar" style="height:52px;background:#FFEE00;"></div>
-                <span class="groovy-bar-day">We</span>
-              </div>
-              <div class="groovy-bar-col">
-                <div class="groovy-bar" style="height:78px;background:#E04F9E;"></div>
-                <span class="groovy-bar-day">Th</span>
-              </div>
-              <div class="groovy-bar-col">
-                <div class="groovy-bar" style="height:60px;background:#7EA8F8;"></div>
-                <span class="groovy-bar-day">Fr</span>
-              </div>
-              <div class="groovy-bar-col">
-                <div class="groovy-bar" style="height:92px;background:#0D7A22;"></div>
-                <span class="groovy-bar-day">Sa</span>
-              </div>
+              ${(() => {
+                const daysMeta = [
+                  { code: 'Mo', color: '#1E6BFF', base: 40 },
+                  { code: 'Tu', color: '#FF6FB5', base: 56 },
+                  { code: 'We', color: '#FFEE00', base: 48 },
+                  { code: 'Th', color: '#E04F9E', base: 68 },
+                  { code: 'Fr', color: '#7EA8F8', base: 54 },
+                  { code: 'Sa', color: '#0D7A22', base: 82 },
+                  { code: 'Su', color: '#FF7A1A', base: 64 }
+                ];
+                const nowDate = new Date();
+                const jsDay = nowDate.getDay(); // 0=Su..6=Sa
+                const todayIdx = jsDay === 0 ? 6 : jsDay - 1;
+                const xpMap = (this.state.stats && this.state.stats.dailyXpByDate) || {};
+                const todayIso = nowDate.toISOString().slice(0, 10);
+                const todayEarned = xpMap[todayIso] || 0;
+                return daysMeta.map((d, idx) => {
+                  const isToday = idx === todayIdx;
+                  const heightPx = isToday ? Math.min(96, Math.max(48, 42 + Math.round(todayEarned * 0.6))) : d.base;
+                  return `
+                    <div class="groovy-bar-col" title="${isToday ? `Сегодня: +${todayEarned} XP` : d.code}">
+                      <div class="groovy-bar" style="height:${heightPx}px;background:${d.color};${isToday ? 'outline:2.5px solid #000;box-shadow:0 0 0 2px #FFEE00;' : ''}"></div>
+                      <span class="groovy-bar-day" style="${isToday ? 'font-weight:900;text-decoration:underline;' : ''}">${d.code}</span>
+                    </div>
+                  `;
+                }).join('');
+              })()}
             </div>
           </div>
         </div>
@@ -3335,6 +3777,12 @@ const ScayaApp = {
         </button>
         <button class="btn-secondary-ocean" onclick="ScayaApp.switchTab('mistakes')">
           Мои ошибки (${this.state.mistakes.length})
+        </button>
+        <button class="btn-secondary-ocean" onclick="ScayaApp.openIrregularVerbsModal()">
+          🔥 Неправильные глаголы
+        </button>
+        <button class="btn-secondary-ocean" onclick="ScayaApp.openTwelveTensesModal()">
+          🧭 12 времён
         </button>
       </div>
 

@@ -233,7 +233,8 @@ window.ScayaCurriculum = {
     {
         "id": "pq_9",
         "cefr": "C1",
-        "zoneId": "trench_c1",
+        "zoneId": "twilight_c1",
+        "skillTag": "Инверсия и синтаксис C1",
         "prompt": "Not only ___ the exam, but she also got the highest score in Cambridge.",
         "options": [
             "did she pass",
@@ -247,7 +248,8 @@ window.ScayaCurriculum = {
     {
         "id": "pq_10",
         "cefr": "C2",
-        "zoneId": "atlantis_c2",
+        "zoneId": "abyss_c2",
+        "skillTag": "Мастерство и инверсия C2",
         "prompt": "___ it not been for the lighthouse, the ship would have hit the reef.",
         "options": [
             "Had",
@@ -257,6 +259,156 @@ window.ScayaCurriculum = {
         ],
         "correct": "Had",
         "explanation": "Бессоюзная инверсия в условном предложении 3-го типа (C1/C2): «Had it not been for...» заменяет «If it had not been for...»."
+    },
+    {
+        "id": "pq_11",
+        "cefr": "A1",
+        "zoneId": "lagoon_a1",
+        "skillTag": "Артикли и предлоги",
+        "prompt": "Our English lesson starts ___ 6:30 p.m. ___ Friday.",
+        "options": [
+            "at ... on",
+            "in ... at",
+            "on ... at",
+            "at ... in"
+        ],
+        "correct": "at ... on",
+        "explanation": "С часами используется предлог AT (at 6:30 p.m.), а с днями недели — предлог ON (on Friday)."
+    },
+    {
+        "id": "pq_12",
+        "cefr": "A1",
+        "zoneId": "lagoon_a1",
+        "skillTag": "Артикли и предлоги",
+        "prompt": "There aren't ___ free tables outside, but would you like ___ hot cocoa inside?",
+        "options": [
+            "any ... some",
+            "some ... any",
+            "any ... any",
+            "no ... some"
+        ],
+        "correct": "any ... some",
+        "explanation": "В отрицании ставится any (aren't any), а при вежливом предложении угощения (Would you like...?) — всегда some."
+    },
+    {
+        "id": "pq_13",
+        "cefr": "A2",
+        "zoneId": "shallows_a2",
+        "skillTag": "Грамматика и времена",
+        "prompt": "We don't have ___ time before the flight — only ___ minutes left!",
+        "options": [
+            "much ... a few",
+            "many ... a little",
+            "much ... a little",
+            "a lot ... few"
+        ],
+        "correct": "much ... a few",
+        "explanation": "Time неисчисляемое (much time), а minutes исчисляемые во множественном числе (a few minutes)."
+    },
+    {
+        "id": "pq_14",
+        "cefr": "A2",
+        "zoneId": "shallows_a2",
+        "skillTag": "Модальные глаголы",
+        "prompt": "You ___ buy a ticket on Sundays — the museum is free! But you ___ touch the exhibits.",
+        "options": [
+            "don't have to ... mustn't",
+            "mustn't ... don't have to",
+            "haven't to ... mustn't",
+            "shouldn't ... don't have to"
+        ],
+        "correct": "don't have to ... mustn't",
+        "explanation": "Don't have to — нет необходимости (вход бесплатный), mustn't — строгий запрет (нельзя трогать экспонаты)."
+    },
+    {
+        "id": "pq_15",
+        "cefr": "B1",
+        "zoneId": "reef_b1",
+        "skillTag": "Грамматика и времена",
+        "prompt": "Could you tell me where ___?",
+        "options": [
+            "the nearest station is",
+            "is the nearest station",
+            "does the nearest station",
+            "is located the nearest station"
+        ],
+        "correct": "the nearest station is",
+        "explanation": "В косвенном вопросе (Indirect Question) после Could you tell me where... сохраняется прямой порядок слов: подлежащее + глагол."
+    },
+    {
+        "id": "pq_16",
+        "cefr": "B1",
+        "zoneId": "reef_b1",
+        "skillTag": "Лексика и фразовые глаголы",
+        "prompt": "The music is too loud — could you please ___?",
+        "options": [
+            "turn it down",
+            "turn down it",
+            "turn it out",
+            "put it down"
+        ],
+        "correct": "turn it down",
+        "explanation": "В разделяемых фразовых глаголах личное местоимение (it) всегда ставится между глаголом и частицей: turn it down."
+    },
+    {
+        "id": "pq_17",
+        "cefr": "B2",
+        "zoneId": "ocean_b2",
+        "skillTag": "Грамматика и времена",
+        "prompt": "At first waking up at dawn was hard, but Mira soon got used to ___ early.",
+        "options": [
+            "rising",
+            "rise",
+            "be rising",
+            "rose"
+        ],
+        "correct": "rising",
+        "explanation": "В обороте get used to («привыкнуть к чему-либо») частица to — предлог, после которого требуется герундий (-ing)."
+    },
+    {
+        "id": "pq_18",
+        "cefr": "B2",
+        "zoneId": "ocean_b2",
+        "skillTag": "Словообразование и стиль",
+        "prompt": "We are having the historic facade of the theatre ___ by specialists next month.",
+        "options": [
+            "restored",
+            "restore",
+            "restoring",
+            "to restore"
+        ],
+        "correct": "restored",
+        "explanation": "Каузативная конструкция have something done (have the facade restored) показывает, что работу выполняют мастера."
+    },
+    {
+        "id": "pq_19",
+        "cefr": "C1",
+        "zoneId": "twilight_c1",
+        "skillTag": "Инверсия и синтаксис C1",
+        "prompt": "The committee recommended that every witness ___ heard impartially.",
+        "options": [
+            "be",
+            "is",
+            "was",
+            "would be"
+        ],
+        "correct": "be",
+        "explanation": "В формальном сослагательном наклонении (Subjunctive C1) после recommend / insist / essential that используется чистая форма глагола be."
+    },
+    {
+        "id": "pq_20",
+        "cefr": "C2",
+        "zoneId": "abyss_c2",
+        "skillTag": "Мастерство и инверсия C2",
+        "prompt": "No sooner ___ his baton than the concert hall fell into complete silence.",
+        "options": [
+            "had the conductor raised",
+            "the conductor had raised",
+            "did the conductor raise",
+            "has the conductor raised"
+        ],
+        "correct": "had the conductor raised",
+        "explanation": "Коррелятивная инверсия уровня C2: No sooner + had + подлежащее + V3 ... than."
     }
 ],
 
@@ -16906,6 +17058,58 @@ window.ScayaWordDictionary = {
     });
   });
 
+  curr.grammarDrillsByZone = GRAMMAR_DRILL_BANK_BY_ZONE;
+  curr.cambridgeTransformsByZone = CAMBRIDGE_TRANSFORM_BY_ZONE;
+
+  curr.irregularVerbs = [
+    { group: "1. Все три формы одинаковые (AAA)", v1: "cut", v2: "cut", v3: "cut", ru: "резать", ex: "She cut the lemon into thin slices." },
+    { group: "1. Все три формы одинаковые (AAA)", v1: "put", v2: "put", v3: "put", ru: "класть, ставить", ex: "Blinky put the vinyl record on the player." },
+    { group: "1. Все три формы одинаковые (AAA)", v1: "cost", v2: "cost", v3: "cost", ru: "стоить", ex: "The vintage jacket cost fifty shells." },
+    { group: "1. Все три формы одинаковые (AAA)", v1: "let", v2: "let", v3: "let", ru: "позволять, разрешать", ex: "Let's swim to the coral garden!" },
+    { group: "1. Все три формы одинаковые (AAA)", v1: "read", v2: "read [red]", v3: "read [red]", ru: "читать", ex: "I have already read this novel twice." },
+    { group: "2. Звонкая рифма i – a – u", v1: "begin", v2: "began", v3: "begun", ru: "начинать(ся)", ex: "The festival had already begun when we arrived." },
+    { group: "2. Звонкая рифма i – a – u", v1: "sing", v2: "sang", v3: "sung", ru: "петь", ex: "Mira sang a beautiful ballad on stage." },
+    { group: "2. Звонкая рифма i – a – u", v1: "swim", v2: "swam", v3: "swum", ru: "плавать", ex: "Have you ever swum with pink dolphins?" },
+    { group: "2. Звонкая рифма i – a – u", v1: "drink", v2: "drank", v3: "drunk", ru: "пить", ex: "We drank warm matcha latte in the café." },
+    { group: "2. Звонкая рифма i – a – u", v1: "ring", v2: "rang", v3: "rung", ru: "звонить, звенеть", ex: "The phone rang while I was making breakfast." },
+    { group: "3. Рифма на -ought / -aught", v1: "buy", v2: "bought", v3: "bought", ru: "покупать", ex: "Lulu bought a new pink bow yesterday." },
+    { group: "3. Рифма на -ought / -aught", v1: "bring", v2: "brought", v3: "brought", ru: "приносить", ex: "Sky brought hot cocoa for all his friends." },
+    { group: "3. Рифма на -ought / -aught", v1: "think", v2: "thought", v3: "thought", ru: "думать", ex: "I have always thought that English is melodic." },
+    { group: "3. Рифма на -ought / -aught", v1: "teach", v2: "taught", v3: "taught", ru: "обучать, преподавать", ex: "Mira taught us how to pronounce tricky words." },
+    { group: "3. Рифма на -ought / -aught", v1: "catch", v2: "caught", v3: "caught", ru: "ловить, успевать на", ex: "We caught the early morning train to the coast." },
+    { group: "4. Полёт на -ew → -own", v1: "know", v2: "knew", v3: "known", ru: "знать", ex: "I have known Sky since childhood." },
+    { group: "4. Полёт на -ew → -own", v1: "grow", v2: "grew", v3: "grown", ru: "расти, выращивать", ex: "Rare orchids have grown in this greenhouse." },
+    { group: "4. Полёт на -ew → -own", v1: "fly", v2: "flew", v3: "flown", ru: "летать", ex: "Have you ever flown over the ocean?" },
+    { group: "4. Полёт на -ew → -own", v1: "draw", v2: "drew", v3: "drawn", ru: "рисовать", ex: "The artist drew a sketch of the lighthouse." },
+    { group: "5. Классика на -o- → -o-en", v1: "speak", v2: "spoke", v3: "spoken", ru: "говорить, разговаривать", ex: "English is spoken all over the world." },
+    { group: "5. Классика на -o- → -o-en", v1: "choose", v2: "chose", v3: "chosen", ru: "выбирать", ex: "You have chosen the best learning path!" },
+    { group: "5. Классика на -o- → -o-en", v1: "break", v2: "broke", v3: "broken", ru: "ломать(ся), нарушать", ex: "The silence was broken by joyful laughter." },
+    { group: "5. Классика на -o- → -o-en", v1: "forget", v2: "forgot", v3: "forgotten", ru: "забывать", ex: "I have never forgotten our first trip." },
+    { group: "5. Классика на -o- → -o-en", v1: "write", v2: "wrote", v3: "written", ru: "писать", ex: "This chronicle was written centuries ago." },
+    { group: "6. Топ-глаголы движения и жизни", v1: "go", v2: "went", v3: "gone", ru: "идти, ехать", ex: "Her skateboard is here — she can't have gone far!" },
+    { group: "6. Топ-глаголы движения и жизни", v1: "see", v2: "saw", v3: "seen", ru: "видеть", ex: "Never before have we seen such a bright reef." },
+    { group: "6. Топ-глаголы движения и жизни", v1: "take", v2: "took", v3: "taken", ru: "брать, занимать (время)", ex: "Lulu took a photo of the sunset." },
+    { group: "6. Топ-глаголы движения и жизни", v1: "give", v2: "gave", v3: "given", ru: "давать, дарить", ex: "Given enough practice, anyone can master C2." },
+    { group: "6. Топ-глаголы движения и жизни", v1: "find", v2: "found", v3: "found", ru: "находить", ex: "Blinky found the lost pink bow on a coral branch." },
+    { group: "6. Топ-глаголы движения и жизни", v1: "leave", v2: "left", v3: "left", ru: "уходить, оставлять", ex: "The boat had already left when we reached the pier." }
+  ];
+
+  curr.twelveTensesMatrix = [
+    { tense: "Present Simple", level: "A1", formula: "V1 / V-s (do / does)", marker: "usually, every day, always", ex: "Sky drinks matcha every morning.", ru: "Регулярные привычки, факты и расписания" },
+    { tense: "Present Continuous", level: "A1", formula: "am / is / are + V-ing", marker: "right now, Look!, at the moment", ex: "Look! Lulu is skating on the boardwalk.", ru: "Действие прямо сейчас или точный план на ближайшее будущее" },
+    { tense: "Past Simple", level: "A2", formula: "V2 / V-ed (did + V1)", marker: "yesterday, last summer, in 2022, ago", ex: "We visited the coral sanctuary last week.", ru: "Завершённое событие в конкретный момент в прошлом" },
+    { tense: "Past Continuous", level: "B1", formula: "was / were + V-ing", marker: "while, at 6 p.m. yesterday, when", ex: "While we were diving, we saw a sea turtle.", ru: "Длительный фоновый процесс в определённый момент прошлого" },
+    { tense: "Future Simple", level: "A2", formula: "will + V1", marker: "tomorrow, I think, I promise", ex: "The phone is ringing — I will answer it!", ru: "Спонтанные решения в момент речи, обещания и прогнозы" },
+    { tense: "Future Continuous", level: "B2", formula: "will be + V-ing", marker: "at this time tomorrow, at noon next Monday", ex: "This time tomorrow we will be flying over the ocean.", ru: "Действие, которое будет в самом разгаре в точный момент будущего" },
+    { tense: "Present Perfect", level: "B1", formula: "have / has + V3", marker: "already, just, yet, ever, never, for, since", ex: "I have known Mira for five years.", ru: "Результат к настоящему моменту или жизненный опыт (важен итог, а не дата)" },
+    { tense: "Present Perfect Continuous", level: "B2", formula: "have / has been + V-ing", marker: "for three hours, since morning, all day", ex: "Blinky has been mixing tracks since morning.", ru: "Процесс, который начался в прошлом и всё ещё продолжается сейчас" },
+    { tense: "Past Perfect", level: "B1", formula: "had + V3", marker: "by the time, before, already + Past Simple", ex: "When we arrived, the concert had already started.", ru: "Предпрошедшее действие, случившееся РАНЬШЕ другого прошлого события" },
+    { tense: "Past Perfect Continuous", level: "C1", formula: "had been + V-ing", marker: "for two hours before...", ex: "They had been sailing for days before they spotted land.", ru: "Длительный процесс, который шёл ДО определённого момента в прошлом" },
+    { tense: "Future Perfect", level: "B2", formula: "will have + V3", marker: "by 2030, by Friday, by the time you arrive", ex: "By next month, you will have mastered 500 new words!", ru: "Действие, которое уже будет полностью завершено К моменту в будущем" },
+    { tense: "Future Perfect Continuous", level: "C1–C2", formula: "will have been + V-ing", marker: "for ten years by 2030", ex: "By May, Mira will have been singing in the choir for a decade.", ru: "Длительность процесса к конкретному рубежу в будущем" }
+  ];
+
   curr.units = expandedUnits;
 })();
+
 
