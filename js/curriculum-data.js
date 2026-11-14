@@ -15726,6 +15726,660 @@ window.ScayaWordDictionary = {
     return `${example} (ключевое слово: ___)`;
   }
 
+  // Добавляем специализированные диалоговые истории C1 и C2, чтобы в разделе Stories были представлены все уровни
+  if (Array.isArray(curr.stories) && !curr.stories.some(s => s.id === "story_7")) {
+    curr.stories.push(
+      {
+        id: "story_7",
+        cefr: "C1",
+        titleEn: "The Coral Senate Debate",
+        titleRu: "Дипломатические дебаты в Сенате Рифа",
+        icon: "🏛",
+        rewardPearls: 55,
+        steps: [
+          {
+            speaker: "sky",
+            speakerName: "Дельфин Скай",
+            en: "Never before have so many delegates gathered in the Coral Senate to discuss sustainable ocean routes.",
+            ru: "Ещё никогда прежде столько делегатов не собиралось в Коралловом Сенате для обсуждения экологичных морских маршрутов."
+          },
+          {
+            speaker: "mermaid",
+            speakerName: "Русалка Мира",
+            en: "What truly persuades the assembly is empirical evidence, not mere rhetoric.",
+            ru: "Что по-настоящему убеждает ассамблею, так это эмпирические доказательства, а не просто красивая риторика."
+          },
+          {
+            speaker: "jelly",
+            speakerName: "Медузёнок Блинки",
+            en: "Should any ambiguity remain in the bilateral clause, we will mediate until we reach full consensus!",
+            ru: "Если в двустороннем пункте договора останется хоть какая-то двусмысленность, мы будем выступать посредниками до полного консенсуса!"
+          },
+          {
+            speaker: "shark",
+            speakerName: "Акулёнок Лулу",
+            en: "Not only did the delegates sign the treaty, but they also established a new marine sanctuary!",
+            ru: "Делегаты не только подписали договор, но и основали новый морской заповедник!"
+          }
+        ],
+        comprehensionQuestion: {
+          prompt: "Какая грамматическая конструкция уровня C1 прозвучала в реплике Ская «Never before have so many delegates gathered...»?",
+          options: [
+            "Эмфатическая инверсия (вспомогательный глагол have перед подлежащим после Never before)",
+            "Обычный порядок слов в Past Simple",
+            "Пассивный залог в будущем времени",
+            "Условное предложение первого типа (First Conditional)"
+          ],
+          correct: "Эмфатическая инверсия (вспомогательный глагол have перед подлежащим после Never before)",
+          explanation: "После отрицательных и ограничительных наречий в начале фразы (Never before, Rarely, Not only) на уровне C1 используется инверсия: have so many delegates gathered."
+        }
+      },
+      {
+        id: "story_8",
+        cefr: "C2",
+        titleEn: "Symphony of the Luminous Abyss",
+        titleRu: "Симфония Светящейся Бездны (Мастерство C2)",
+        icon: "🎻",
+        rewardPearls: 65,
+        steps: [
+          {
+            speaker: "mermaid",
+            speakerName: "Русалка Мира",
+            en: "No sooner had the maestro raised his baton than a sonorous polyphony echoed through the crystal amphitheatre.",
+            ru: "Едва маэстро поднял дирижёрскую палочку, как глубокая полнозвучная полифония разнеслась по хрустальному амфитеатру."
+          },
+          {
+            speaker: "sky",
+            speakerName: "Дельфин Скай",
+            en: "Paradoxical though it may seem, the deepest silence before the crescendo evokes the strongest emotional resonance.",
+            ru: "Как бы парадоксально это ни казалось, именно глубочайшая тишина перед крещендо пробуждает самый сильный душевный отклик."
+          },
+          {
+            speaker: "jelly",
+            speakerName: "Медузёнок Блинки",
+            en: "Had it not been for decades of tireless rehearsals, such effortless virtuosity would have been inconceivable.",
+            ru: "Если бы не десятилетия неустанных репетиций, подобная лёгкая виртуозность была бы немыслима."
+          },
+          {
+            speaker: "shark",
+            speakerName: "Акулёнок Лулу",
+            en: "We needn't have worried about the acoustics — the natural symmetry of the cavern amplified every single note!",
+            ru: "Мы зря волновались об акустике — природная симметрия грота усилила каждую ноту!"
+          }
+        ],
+        comprehensionQuestion: {
+          prompt: "Что означает оборот Лулу «We needn't have worried about the acoustics» (уровень C2)?",
+          options: [
+            "Мы зря волновались (мы волновались, хотя в этом не было необходимости)",
+            "Нам не нужно было волноваться, и мы были совершенно спокойны",
+            "Нам строго запрещено волноваться перед концертом",
+            "Мы обязательно будем волноваться на следующем концерте"
+          ],
+          correct: "Мы зря волновались (мы волновались, хотя в этом не было необходимости)",
+          explanation: "Конструкция needn't have + V3 означает, что действие в прошлом было совершено напрасно (зря волновались, всё оказалось прекрасно)."
+        }
+      }
+    );
+  }
+
+  // Полный банк профильных грамматических заданий (закрывает все классические темы Мёрфи A1–C2:
+  // артикли a/an/the/—, предлоги времени и места at/on/in, much/many/a few/a little,
+  // Present Perfect vs Past Simple, фразовые глаголы, словообразование, инверсию и модальные нюансы)
+  const GRAMMAR_DRILL_BANK_BY_ZONE = {
+    lagoon_a1: [
+      {
+        topic: "Артикли a / an / the / — (Zero Article)",
+        prompt: "Выбери правильные артикли:\n«Mira is ___ honest friend, and she lives near ___ sea.»",
+        options: ["an ... the", "a ... the", "an ... a", "the ... —"],
+        correct: "an ... the",
+        explanation: "В слове honest буква h не произносится ([ˈɒnɪst] начинается с гласного звука), поэтому ставится an honest friend. Море конкретное — near the sea."
+      },
+      {
+        topic: "Нулевой артикль в устойчивых выражениях (Zero Article)",
+        prompt: "Выбери правильный вариант без типичной ошибки с артиклем:\n«We usually have ___ breakfast at 8:00 and go to ___ work by bus.»",
+        options: ["— ... — (без артиклей)", "a ... the", "the ... a", "the ... the"],
+        correct: "— ... — (без артиклей)",
+        explanation: "В выражениях have breakfast / lunch / dinner, go to work / school / bed и by bus / by train артикль НЕ ставится!"
+      },
+      {
+        topic: "Предлоги времени at / on / in",
+        prompt: "Вставь точные предлоги времени:\n«Our speaking club meets ___ Friday evenings ___ 6:30 p.m. ___ May.»",
+        options: ["on ... at ... in", "in ... at ... on", "at ... on ... in", "on ... in ... at"],
+        correct: "on ... at ... in",
+        explanation: "Правило предлогов времени: ON с днями недели (on Friday evenings), AT с точным временем на часах (at 6:30), IN с месяцами и годами (in May)."
+      },
+      {
+        topic: "Притяжательные местоимения my vs mine / your vs yours",
+        prompt: "Выбери правильную форму местоимения:\n«This pink skateboard isn't ___ — I think it is ___!»",
+        options: ["my ... hers", "mine ... her", "mine ... hers", "my ... her"],
+        correct: "mine ... hers",
+        explanation: "Когда после местоимения НЕТ существительного, используются самостоятельные формы: mine (мой), yours (твой), hers (её), theirs (их)."
+      },
+      {
+        topic: "Порядок слов в специальных вопросах (Wh- Questions)",
+        prompt: "Выбери грамматически правильный вопрос:\n«Куда твоя сестра обычно ходит по выходным?»",
+        options: [
+          "Where does your sister usually go at weekends?",
+          "Where your sister usually goes at weekends?",
+          "Where does your sister usually goes at weekends?",
+          "Where is your sister usually go at weekends?"
+        ],
+        correct: "Where does your sister usually go at weekends?",
+        explanation: "В вопросе Present Simple с he/she/it после вопросительного слова ставится does, а основной глагол возвращается в начальную форму БЕЗ -s (go)."
+      },
+      {
+        topic: "Выбор между am/is/are и do/does в вопросах",
+        prompt: "Дополни два вопроса правильными вспомогательными глаголами:\n«1) ___ you ready for the trip?  2) ___ you have your ticket?»",
+        options: ["Are ... Do", "Do ... Are", "Are ... Are", "Do ... Do"],
+        correct: "Are ... Do",
+        explanation: "В первом вопросе нет действия (прилагательное ready — «готов»), поэтому нужен глагол to be (Are you ready?). Во втором есть глагол действия have — нужен Do."
+      },
+      {
+        topic: "Some vs Any в вопросах, просьбах и отрицаниях",
+        prompt: "Выбери правильное сочетание some / any:\n«There aren't ___ free tables outside, but would you like ___ hot tea inside?»",
+        options: ["any ... some", "some ... any", "any ... any", "no ... some"],
+        correct: "any ... some",
+        explanation: "В отрицаниях всегда ставится any (aren't any), но в вежливых предложениях и угощениях (Would you like...?) всегда используется some!"
+      },
+      {
+        topic: "Present Simple vs Present Continuous (обычно vs прямо сейчас)",
+        prompt: "Сравни два действия в одном предложении:\n«Sky usually ___ coffee in the morning, but right now he ___ matcha tea.»",
+        options: ["drinks ... is drinking", "is drinking ... drinks", "drink ... drinking", "drinks ... drinks"],
+        correct: "drinks ... is drinking",
+        explanation: "Usually (обычно, регулярная привычка) требует Present Simple (drinks), а right now (прямо сейчас) — Present Continuous (is drinking)."
+      }
+    ],
+    shallows_a2: [
+      {
+        topic: "Количественные местоимения much / many / a few / a little",
+        prompt: "Выбери правильные слова количества:\n«We don't have ___ time before the train, only ___ minutes!»",
+        options: ["much ... a few", "many ... a little", "much ... a little", "a lot ... few"],
+        correct: "much ... a few",
+        explanation: "Time (время) неисчисляемое — в отрицании ставим much time. Minutes (минуты) исчисляемые во мн. числе — ставим a few minutes (несколько минут)."
+      },
+      {
+        topic: "Исчисляемые и неисчисляемые существительные (advice / news / luggage)",
+        prompt: "Выбери вариант БЕЗ ошибки с неисчисляемым существительным:\n«Thank you for such useful ___! Where can I leave my ___?»",
+        options: ["advice ... luggage", "advices ... luggages", "an advice ... luggage", "advice ... a luggage"],
+        correct: "advice ... luggage",
+        explanation: "Слова advice (совет/советы), information, news и luggage (багаж) в английском всегда неисчисляемые: они не имеют формы -s и не употребляются с артиклем a/an!"
+      },
+      {
+        topic: "Past Simple: вопросы и отрицания с did + V1",
+        prompt: "Дополни диалог в прошедшем времени (Past Simple):\n«— Where did you ___ that cosy sweater? — I ___ it at the vintage market yesterday.»",
+        options: ["buy ... bought", "bought ... bought", "buy ... buyed", "bought ... buy"],
+        correct: "buy ... bought",
+        explanation: "В вопросе с did глагол стоит в первой форме (Where did you buy?), а в утверждении — во второй неправильной форме (bought)."
+      },
+      {
+        topic: "Степени сравнения прилагательных и исключения (good / bad / far)",
+        prompt: "Выбери правильную степень сравнения:\n«Today's weather is much ___ than yesterday's, and this beach is ___ place on the island!»",
+        options: ["better ... the best", "more good ... the best", "gooder ... the most good", "better ... best"],
+        correct: "better ... the best",
+        explanation: "Прилагательное good образует степени сравнения не по правилу: good → better (лучше) → the best (самый лучший, всегда с артиклем the)."
+      },
+      {
+        topic: "Устойчивые предлоги после прилагательных (keen on / afraid of / good at)",
+        prompt: "Вставь правильные предлоги:\n«Lulu is really good ___ skateboarding and keen ___ learning new tricks.»",
+        options: ["at ... on", "in ... about", "at ... in", "for ... with"],
+        correct: "at ... on",
+        explanation: "Запомни связки: be good AT something (хорошо уметь что-то), be keen ON something (увлекаться чем-то), be afraid OF, be interested IN."
+      },
+      {
+        topic: "Модальные глаголы: mustn't (нельзя) vs don't have to (не обязательно)",
+        prompt: "Почувствуй разницу между запретом и отсутствием необходимости:\n«You ___ buy a ticket for the gallery on Sundays — it's free! But you ___ touch the paintings.»",
+        options: ["don't have to ... mustn't", "mustn't ... don't have to", "haven't to ... mustn't", "don't must ... shouldn't"],
+        correct: "don't have to ... mustn't",
+        explanation: "Don't have to означает «нет необходимости, не нужно» (вход бесплатный), а mustn't — строгий запрет («нельзя трогать картины»)."
+      },
+      {
+        topic: "Вопросы к подлежащему (Who called you? vs Who did you call?)",
+        prompt: "Выбери правильный вопрос к подлежащему («Кто оставил эту книгу на столе?»):",
+        options: [
+          "Who left this book on the table?",
+          "Who did leave this book on the table?",
+          "Who did left this book on the table?",
+          "Who was leave this book on the table?"
+        ],
+        correct: "Who left this book on the table?",
+        explanation: "Когда вопрос с Who или What задаётся к подлежащему («Кто совершил действие?»), вспомогательный глагол did НЕ используется: Who left...?"
+      },
+      {
+        topic: "Три способа выразить будущее: will vs be going to vs Present Continuous",
+        prompt: "Выбери точные формы будущего времени:\n«— The phone is ringing! — I ___ answer it! By the way, we ___ Mira at the café at 5 p.m.»",
+        options: ["will ... are meeting", "am going to ... will meet", "meet ... will", "will ... meet"],
+        correct: "will ... are meeting",
+        explanation: "Для мгновенного решения в момент речи («Я отвечу!») используем will. Для точной личной договорённости на 5 часов вечера — Present Continuous (are meeting)."
+      }
+    ],
+    reef_b1: [
+      {
+        topic: "Главный контраст B1: Present Perfect vs Past Simple",
+        prompt: "Выбери между Present Perfect (связь с настоящим) и Past Simple (точное время в прошлом):\n«I ___ this film twice already! The first time I ___ it was in 2022.»",
+        options: ["have seen ... saw", "saw ... have seen", "have saw ... saw", "seen ... did see"],
+        correct: "have seen ... saw",
+        explanation: "С наречием already (жизненный опыт к настоящему моменту) нужен Present Perfect (have seen). А с точной датой в прошлом (in 2022) — только Past Simple (saw)."
+      },
+      {
+        topic: "Фразовые глаголы и место местоимения (turn it down / run out of / look after)",
+        prompt: "Выбери грамматически безупречный вариант с фразовыми глаголами:\n«We have ___ coffee, and the radio is too loud — could you ___?»",
+        options: ["run out of ... turn it down", "ran out ... turn down it", "run out from ... turn it off", "running out of ... turn down"],
+        correct: "run out of ... turn it down",
+        explanation: "Run out of — «закончиться» (у нас закончился кофе). А в разделяемых фразовых глаголах местоимение it ВСЕГДА ставится посередине: turn it down (не turn down it!)."
+      },
+      {
+        topic: "Герундий (-ing) vs Инфинитив (to + V) после глаголов",
+        prompt: "Выбери правильные формы после suggest и promise:\n«Blinky suggested ___ early, and Lulu promised ___ on time.»",
+        options: ["leaving ... to arrive", "to leave ... arriving", "to leave ... to arrive", "leaving ... arriving"],
+        correct: "leaving ... to arrive",
+        explanation: "После глаголов suggest, enjoy, avoid, mind, finish всегда идёт герундий (-ing: suggested leaving), а после promise, decide, agree, refuse, manage — инфинитив (to arrive)."
+      },
+      {
+        topic: "Косвенные вопросы (Indirect Questions) — прямой порядок слов",
+        prompt: "Выбери правильное продолжение вежливого косвенного вопроса:\n«Could you tell me where ___?»",
+        options: [
+          "the nearest metro station is",
+          "is the nearest metro station",
+          "does the nearest metro station",
+          "is located the nearest metro station"
+        ],
+        correct: "the nearest metro station is",
+        explanation: "В косвенных вопросах после фраз Could you tell me / Do you know where... используется ПРЯМОЙ порядок слов (подлежащее + глагол: where the station is)."
+      },
+      {
+        topic: "Разделительные вопросы (Question Tags)",
+        prompt: "Подбери правильный «хвостик» разделительного вопроса:\n«You have lived near the ocean since childhood, ___?»",
+        options: ["haven't you", "don't you", "didn't you", "aren't you"],
+        correct: "haven't you",
+        explanation: "В основной части стоит Present Perfect (You have lived...), поэтому в кратком вопросе-хвостике повторяется тот же вспомогательный глагол с отрицанием: haven't you?"
+      },
+      {
+        topic: "First Conditional vs Second Conditional (реальное условие vs гипотеза)",
+        prompt: "Сравни реальный план и мечту:\n«If I ___ free time tomorrow, I'll help you; and if I ___ a dolphin like Sky, I would swim across the ocean!»",
+        options: ["have ... were", "will have ... was", "had ... would be", "have ... would be"],
+        correct: "have ... were",
+        explanation: "В First Conditional после if ставится Present Simple (If I have... I'll help). В Second Conditional (нереальная гипотеза сейчас) после if ставится Past Simple / were (If I were... I would swim)."
+      },
+      {
+        topic: "Глаголы состояния (State Verbs) в длительных временах",
+        prompt: "Как правильно сказать «Я знаю Миру уже пять лет» (с глаголом состояния know)?",
+        options: [
+          "I have known Mira for five years.",
+          "I have been knowing Mira for five years.",
+          "I am knowing Mira for five years.",
+          "I knew Mira since five years."
+        ],
+        correct: "I have known Mira for five years.",
+        explanation: "Глаголы состояния (know, believe, belong, understand, own) не употребляются в Continuous (-ing), поэтому с for/since используется Present Perfect Simple: have known."
+      },
+      {
+        topic: "Past Continuous vs Past Perfect в рассказе",
+        prompt: "Выбери точные времена для истории:\n«When we arrived at the harbour, the boat ___ already ___, and the sun ___ into the sea.»",
+        options: ["had ... left / was setting", "has ... left / set", "was ... leaving / had set", "left ... was setting"],
+        correct: "had ... left / was setting",
+        explanation: "Лодка уплыла ДО нашего прихода — это предпрошедшее Past Perfect (had already left). А солнце садилось фоном в тот самый момент — Past Continuous (was setting)."
+      }
+    ],
+    ocean_b2: [
+      {
+        topic: "Словообразование (Word Formation): отрицательные приставки и суффиксы",
+        prompt: "Преобразуй слова COMFORT и PREDICT для контекста уровня B2:\n«Despite the ___ seats, the ending of the thriller was completely ___.»",
+        options: ["uncomfortable ... unpredictable", "incomfortable ... impredictable", "discomfortable ... unpredicted", "uncomforting ... predictableless"],
+        correct: "uncomfortable ... unpredictable",
+        explanation: "От comfort образуется прилагательное uncomfortable (неудобный), а от predict — unpredictable (непредсказуемый: приставка un- + суффикс -able)."
+      },
+      {
+        topic: "Словообразование (Word Formation): приставки ir- / il- / im- / mis-",
+        prompt: "Выбери ряд, где ВСЕ три слова образованы с правильными отрицательными приставками:",
+        options: [
+          "irresponsible, impatient, misunderstand",
+          "unresponsible, inpatient, disunderstand",
+          "irresponsible, unpatient, misinterpret",
+          "inresponsible, impatient, ununderstand"
+        ],
+        correct: "irresponsible, impatient, misunderstand",
+        explanation: "Перед r пишется приставка ir- (irresponsible), перед m и p — im- (impatient, impossible), а со значением «неправильно понять» — mis- (misunderstand)."
+      },
+      {
+        topic: "Контраст used to do vs be used to doing vs get used to doing",
+        prompt: "Выбери правильные формы:\n«Mira ___ live in a quiet bay, so it took her a month to get used to ___ in a busy metropolis.»",
+        options: ["used to ... living", "was used to ... live", "used to ... live", "got used to ... living"],
+        correct: "used to ... living",
+        explanation: "Used to + инфинитив (used to live) описывает прошлую привычку. А в конструкции be / get used to («привыкнуть к чему-либо») to — это предлог, после которого нужен герундий (-ing: get used to living)!"
+      },
+      {
+        topic: "Third Conditional и сожаления о прошлом (I wish I had V3)",
+        prompt: "Дополни предложение о ситуации в прошлом, которую уже не изменить:\n«I wish I ___ her advice last month — if I had listened, I ___ that mistake.»",
+        options: ["had followed ... wouldn't have made", "followed ... wouldn't make", "would follow ... hadn't made", "have followed ... wouldn't have made"],
+        correct: "had followed ... wouldn't have made",
+        explanation: "Для сожалений о прошлом после I wish / If only используется Past Perfect (had followed), а в главной части Third Conditional — would(n't) have + V3 (wouldn't have made)."
+      },
+      {
+        topic: "Модальные глаголы догадки о прошлом (must have / can't have / should have + V3)",
+        prompt: "Выбери точный модальный глагол в прошлом:\n«Blinky's headphones are still on the desk — he ___ the studio yet!»",
+        options: ["can't have left", "mustn't have left", "shouldn't have left", "couldn't leave"],
+        correct: "can't have left",
+        explanation: "Отрицательная логическая догадка о прошлом («не может быть, чтобы он уже ушёл») выражается конструкцией can't have + V3 (can't have left). Mustn't have не используется для догадок!"
+      },
+      {
+        topic: "Каузативная конструкция (have / get something done)",
+        prompt: "Как сказать на уровне B2 «В следующем месяце нам отреставрируют фасад здания (мастера)»?",
+        options: [
+          "We are having the facade of the building restored next month.",
+          "We are restoring the facade of the building next month.",
+          "We have restored the facade of the building next month.",
+          "We are having restored the facade next month."
+        ],
+        correct: "We are having the facade of the building restored next month.",
+        explanation: "Формула каузатива: have + объект (the facade) + V3 (restored) — когда услугу для нас выполняют профессионалы."
+      },
+      {
+        topic: "Глаголы косвенной речи (Reporting Verbs: deny, suggest, remind, advise)",
+        prompt: "Выбери правильную грамматическую модель после deny и remind:\n«The witness denied ___ the document and reminded the lawyer ___ the clause.»",
+        options: ["signing ... to check", "to sign ... checking", "signing ... checking", "to sign ... to check"],
+        correct: "signing ... to check",
+        explanation: "После deny, admit, suggest, apologize for используется герундий (denied signing), а после remind/advise/warn someone — инфинитив с to (reminded the lawyer to check)."
+      },
+      {
+        topic: "Future Perfect vs Future Continuous",
+        prompt: "Сравни действие в процессе и завершённый результат к моменту в будущем:\n«By 2030, scientists ___ this reef for a decade, and at noon tomorrow they ___ underwater sensors.»",
+        options: ["will have studied ... will be testing", "will study ... will have tested", "will be studying ... will test", "have studied ... are testing"],
+        correct: "will have studied ... will be testing",
+        explanation: "Предлог By (к 2030 году) указывает на итог к моменту в будущем — Future Perfect (will have studied). Точный момент в будущем (at noon tomorrow) — Future Continuous (will be testing)."
+      }
+    ],
+    twilight_c1: [
+      {
+        topic: "Отрицательная и ограничительная инверсия (Inversion C1)",
+        prompt: "Выбери вариант с безупречной инверсией после Not only и Only after:\n«Not only ___ the treaty, but only after months of talks ___ full consensus.»",
+        options: [
+          "did they sign ... did they reach",
+          "they signed ... they reached",
+          "did they signed ... reached they",
+          "had they sign ... did they reached"
+        ],
+        correct: "did they sign ... did they reach",
+        explanation: "При вынесении Not only и Only after (придаточного времени) в начало предложения в главной части происходит инверсия (вспомогательный глагол did + подлежащее + V1)."
+      },
+      {
+        topic: "Смешанные условные предложения (Mixed Conditionals)",
+        prompt: "Соедини условие в прошлом с результатом в настоящем:\n«If the city ___ in green infrastructure ten years ago, we ___ such severe congestion today.»",
+        options: [
+          "had invested ... wouldn't be facing",
+          "invested ... wouldn't have faced",
+          "would have invested ... didn't face",
+          "had invested ... wouldn't have faced"
+        ],
+        correct: "had invested ... wouldn't be facing",
+        explanation: "Условие относится к прошлому (ten years ago → If + Past Perfect: had invested), а результат — к настоящему (today → would + V1 / would be V-ing: wouldn't be facing)."
+      },
+      {
+        topic: "Сослагательное наклонение (The Mandative Subjunctive)",
+        prompt: "Выбери форму официального протокола и академического стиля C1:\n«The commission recommended that the clause ___ amended immediately and that every delegate ___ impartial.»",
+        options: ["be ... remain", "is ... remains", "was ... remained", "would be ... to remain"],
+        correct: "be ... remain",
+        explanation: "В формальном сослагательном наклонении (Subjunctive) после insist / recommend / essential / vital that употребляется чистая основа глагола без to и без -s (be, remain)."
+      },
+      {
+        topic: "Фокусные конструкции (Wh- Cleft & It- Cleft Sentences)",
+        prompt: "Усиль главный тезис ораторской речи с помощью Cleft Sentence:\n«___ convinces a sceptical audience is not loud rhetoric, ___ coherent empirical data.»",
+        options: ["What ... but", "That ... and", "Which ... However", "It ... that"],
+        correct: "What ... but",
+        explanation: "Wh-cleft конструкция начинается с What + глагол + is/was (What convinces a sceptical audience is not X, but Y) и фокусирует внимание слушателя на ключевом аргументе."
+      },
+      {
+        topic: "Бессоюзная инверсия в условных предложениях (Should / Were / Had)",
+        prompt: "Замени союз if на формальную инверсию уровня C1:\n«___ the satellite's trajectory deviate even slightly, the mission control team would recalibrate it at once.»",
+        options: ["Were ... to", "Should ... to", "Had ... been", "If ... were"],
+        correct: "Were ... to",
+        explanation: "Во втором типе условных предложений (Second Conditional) формальная инверсия строится по модели: Were + подлежащее + to + V1 (Were the trajectory to deviate...)."
+      },
+      {
+        topic: "Академический пассив с перфектным инфинитивом (is thought to have V3)",
+        prompt: "Передай научную гипотезу о древнем событии в академическом стиле C1:\n«This underwater canyon ___ formed millions of years ago by tectonic shifts.»",
+        options: [
+          "is believed to have been",
+          "believes to be",
+          "is believing to have",
+          "has believed to be"
+        ],
+        correct: "is believed to have been",
+        explanation: "Мнение учёных сейчас (is believed) о событии, которое произошло в далёком прошлом в страдательном залоге, требует перфектного пассивного инфинитива: to have been formed."
+      },
+      {
+        topic: "Конструкция It is high time + Past Simple",
+        prompt: "Как выразить мысль «Давно пора пересмотреть этот закон» на уровне C1?",
+        options: [
+          "It is high time we revised this legislation.",
+          "It is high time we revise this legislation.",
+          "It is high time we have revised this legislation.",
+          "It is high time for revising this legislation."
+        ],
+        correct: "It is high time we revised this legislation.",
+        explanation: "После оборотов It's time / It's high time / It's about time + подлежащее всегда используется форма Past Simple (revised) для выражения действия, которое пора сделать уже сейчас!"
+      },
+      {
+        topic: "Сложные причастные обороты (Having been + V3)",
+        prompt: "Выбери точный причастный оборот для начала предложения:\n«___ with biomimetic micro-textures, the new hull reduced water friction by thirty percent.»",
+        options: ["Having been coated", "Having coating", "Being coat", "To have coated"],
+        correct: "Having been coated",
+        explanation: "Корпус корабля был покрыт (пассивное действие, предшествующее главному глаголу reduced) — поэтому используется перфектное пассивное причастие Having been coated."
+      }
+    ],
+    abyss_c2: [
+      {
+        topic: "Тонкости модальности C2: needn't have V3 vs didn't need to V1",
+        prompt: "Выбери вариант, который точно передаёт мысль: «Мы перевели всю рукопись вручную, хотя оказалось, что её архивный перевод уже существовал (сделали зря)»:",
+        options: [
+          "We needn't have translated the entire manuscript by hand.",
+          "We didn't need to translate the entire manuscript by hand, so we didn't.",
+          "We mustn't have translated the manuscript by hand.",
+          "We couldn't have translated the manuscript by hand."
+        ],
+        correct: "We needn't have translated the entire manuscript by hand.",
+        explanation: "Needn't have + V3 означает, что действие БЫЛО выполнено, но постфактум выяснилось, что оно не требовалось (потратили силы зря). Didn't need to обычно значит, что необходимости не было и действие не делали."
+      },
+      {
+        topic: "Уступительная инверсия с прилагательным (Adjective + though / as)",
+        prompt: "Построй элегантную уступительную конструкцию уровня C2:\n«___ the hypothesis may appear, its mathematical symmetry is beyond dispute.»",
+        options: [
+          "Counter-intuitive though",
+          "Although counter-intuitive as",
+          "Despite counter-intuitive though",
+          "However counter-intuitive that"
+        ],
+        correct: "Counter-intuitive though",
+        explanation: "На уровне C2 уступка часто строится вынесением прилагательного на первое место перед союзами though или as: Counter-intuitive though the hypothesis may appear..."
+      },
+      {
+        topic: "Коррелятивная инверсия No sooner ... than и Scarcely ... when",
+        prompt: "Выбери единственно верное сочетание союзов и времён:\n«Scarcely ___ the equinox eclipse begun ___ the bioluminescent plankton lit up the bay.»",
+        options: ["had ... when", "had ... than", "did ... when", "has ... than"],
+        correct: "had ... when",
+        explanation: "Запомни две классические пары C2: No sooner + had + подлежащее + V3 ... THAN, но Scarcely / Hardly + had + подлежащее + V3 ... WHEN!"
+      },
+      {
+        topic: "Контрафактические обороты But for / Were it not for / Had it not been for",
+        prompt: "Подбери оборот «Если бы не...» для события в прошлом:\n«___ the archaeologists' meticulous preservation, these fragile scrolls would have crumbled to dust.»",
+        options: [
+          "Had it not been for",
+          "Were it not for",
+          "If it were not for",
+          "Should it not be for"
+        ],
+        correct: "Had it not been for",
+        explanation: "Так как в главной части стоит would have crumbled (прошлое, Third Conditional), в условной части используется инверсия прошлого времени: Had it not been for..."
+      },
+      {
+        topic: "Инверсия So + adj + a/an + noun (So rare a phenomenon)",
+        prompt: "Выбери стилистически безупречную конструкцию уровня C2:\n«___ was the maestro's interpretation that the audience remained silent for a full minute.»",
+        options: [
+          "So sublime a performance",
+          "Such sublime a performance",
+          "So a sublime performance",
+          "As sublime a performance"
+        ],
+        correct: "So sublime a performance",
+        explanation: "В высоком стиле C2 используется порядок слов: So + прилагательное + артикль a/an + исчисляемое существительное в ед. числе (So sublime a performance / So rare a phenomenon)."
+      },
+      {
+        topic: "Абсолютные причастные конструкции (With + noun + participle)",
+        prompt: "Дополни предложение с абсолютной конструкцией:\n«With all visual clutter ___, the architectural proportion of the edifice finally came to life.»",
+        options: ["removed", "removing", "having remove", "to remove"],
+        correct: "removed",
+        explanation: "В абсолютной конструкции With + объект + причастие (With all visual clutter removed — «Когда весь визуальный шум был убран») используется страдательное причастие V3."
+      },
+      {
+        topic: "Уступительный оборот Much as + Subject + Verb",
+        prompt: "Выбери точное начало фразы («При всём моём восхищении его эрудицией...»):",
+        options: [
+          "Much as I admire his erudition, I must question his premise.",
+          "As much I admire his erudition, I must question his premise.",
+          "However much as I admire his erudition, I question his premise.",
+          "Much though admire I his erudition, I must question his premise."
+        ],
+        correct: "Much as I admire his erudition, I must question his premise.",
+        explanation: "Оборот Much as + подлежащее + глагол (Much as I admire / respect...) на уровне C2 означает «Как бы сильно я ни уважал... / При всём моём восхищении...»."
+      },
+      {
+        topic: "Стилистический регистр и идиоматика C2 (Be that as it may)",
+        prompt: "Какое связующее выражение уровня C2 идеально переводится как «Как бы то ни было / Пусть так, и всё же»?",
+        options: [
+          "Be that as it may",
+          "Be it how it can",
+          "May that be as it is",
+          "As it may be that"
+        ],
+        correct: "Be that as it may",
+        explanation: "Фиксированный оборот сослагательного наклонения Be that as it may («Как бы то ни было») — маркер владения языком на уровне носителя C2."
+      }
+    ]
+  };
+
+  // Банк заданий на перефразирование с ключевым словом (Cambridge Key Word Transformation) для всех уровней A1–C2
+  const CAMBRIDGE_TRANSFORM_BY_ZONE = {
+    lagoon_a1: [
+      {
+        keyWord: "GOT",
+        originalSentence: "Lulu has a very cute pink bow.",
+        templateBefore: "Lulu ",
+        templateAfter: " a very cute pink bow.",
+        options: ["has got", "have got", "is got", "got has"],
+        correct: "has got",
+        explanation: "Has = has got в значении «имеет, у неё есть» (с местоимениями he/she/it используется has got)."
+      },
+      {
+        keyWord: "THERE",
+        originalSentence: "Our cosy street has two small cafés.",
+        templateBefore: "",
+        templateAfter: " two small cafés in our cosy street.",
+        options: ["There are", "There is", "They are", "It is"],
+        correct: "There are",
+        explanation: "Когда мы говорим, что в каком-то месте находится несколько предметов (two small cafés), предложение начинается с There are."
+      }
+    ],
+    shallows_a2: [
+      {
+        keyWord: "AS",
+        originalSentence: "The bus is slower than the express train.",
+        templateBefore: "The bus is not ",
+        templateAfter: " the express train.",
+        options: ["as fast as", "so faster as", "as faster than", "more fast as"],
+        correct: "as fast as",
+        explanation: "Конструкция not as + прилагательное в базовой форме + as («не такой быстрый, как...») передаёт то же сравнение."
+      },
+      {
+        keyWord: "HAVE",
+        originalSentence: "It isn't necessary for you to wake up early on Sunday.",
+        templateBefore: "You ",
+        templateAfter: " wake up early on Sunday.",
+        options: ["don't have to", "mustn't to", "haven't to", "shouldn't have"],
+        correct: "don't have to",
+        explanation: "It isn't necessary = You don't have to (нет необходимости что-то делать)."
+      }
+    ],
+    reef_b1: [
+      {
+        keyWord: "SINCE",
+        originalSentence: "Sky and Mira became best friends five years ago.",
+        templateBefore: "Sky and Mira have been best friends ",
+        templateAfter: " five years ago.",
+        options: ["since they met", "for they met", "since", "from"],
+        correct: "since they met",
+        explanation: "Present Perfect (have been) + since + точка отсчёта в Past Simple (since they met five years ago)."
+      },
+      {
+        keyWord: "FORWARD",
+        originalSentence: "I can't wait to see you at the reef festival!",
+        templateBefore: "I am really ",
+        templateAfter: " you at the reef festival!",
+        options: ["looking forward to seeing", "looking forward to see", "look forward seeing", "looking forward for seeing"],
+        correct: "looking forward to seeing",
+        explanation: "После фразового оборота look forward to ВСЕГДА ставится герундий с окончанием -ing (looking forward to seeing)."
+      }
+    ],
+    ocean_b2: [
+      {
+        keyWord: "WISH",
+        originalSentence: "I regret not learning to play the guitar when I was younger.",
+        templateBefore: "I ",
+        templateAfter: " to play the guitar when I was younger.",
+        options: ["wish I had learned", "wish I learned", "wish I would learn", "wish to have learned"],
+        correct: "wish I had learned",
+        explanation: "Сожаление о прошлом (I regret not doing) передаётся конструкцией I wish + Past Perfect (I wish I had learned)."
+      },
+      {
+        keyWord: "USED",
+        originalSentence: "Speaking English in public doesn't feel strange to Mira anymore.",
+        templateBefore: "Mira has ",
+        templateAfter: " English in public.",
+        options: ["got used to speaking", "used to speak", "got used to speak", "been used to speak"],
+        correct: "got used to speaking",
+        explanation: "Привыкнуть к чему-либо (перестать чувствовать дискомфорт) — get used to + V-ing (has got used to speaking)."
+      }
+    ],
+    twilight_c1: [
+      {
+        keyWord: "LITTLE",
+        originalSentence: "The diplomats had no idea that their compromise would change history.",
+        templateBefore: "",
+        templateAfter: " that their compromise would change history.",
+        options: ["Little did the diplomats know", "Little the diplomats knew", "Little had known the diplomats", "Little did knew the diplomats"],
+        correct: "Little did the diplomats know",
+        explanation: "Оборот had no idea на уровне C1 перефразируется эмфатической инверсией: Little did + подлежащее + know / suspect / realise."
+      },
+      {
+        keyWord: "ONLY",
+        originalSentence: "The biomimetic wing reduced friction and also saved fuel.",
+        templateBefore: "Not ",
+        templateAfter: " friction, but it also saved fuel.",
+        options: ["only did the biomimetic wing reduce", "only the biomimetic wing reduced", "only reduced the biomimetic wing", "only had the biomimetic wing reduce"],
+        correct: "only did the biomimetic wing reduce",
+        explanation: "После Not only в начале предложения используется инверсия: Not only did + подлежащее + V1."
+      }
+    ],
+    abyss_c2: [
+      {
+        keyWord: "SOONER",
+        originalSentence: "Immediately after the eclipse began, the lagoon started glowing.",
+        templateBefore: "No ",
+        templateAfter: " the lagoon started glowing.",
+        options: ["sooner had the eclipse begun than", "sooner the eclipse had begun when", "sooner did the eclipse begin when", "sooner had begun the eclipse than"],
+        correct: "sooner had the eclipse begun than",
+        explanation: "Формула коррелятивной инверсии C2: No sooner + had + подлежащее + V3 ... than."
+      },
+      {
+        keyWord: "BEEN",
+        originalSentence: "Without Blinky's ancient map, we would never have discovered the cavern.",
+        templateBefore: "Had ",
+        templateAfter: " Blinky's ancient map, we would never have discovered the cavern.",
+        options: ["it not been for", "not it been for", "it been not for", "there not been"],
+        correct: "it not been for",
+        explanation: "Without X в условном предложении третьего типа перефразируется инверсией уровня C2: Had it not been for X..."
+      }
+    ]
+  };
+
   const zones = curr.oceanZones || [];
   zones.forEach(zone => {
     zone.subtitle = `50 разнообразных шагов • Уровень ${zone.cefr}`;
@@ -15779,6 +16433,9 @@ window.ScayaWordDictionary = {
         const k = shift % unique.length;
         return unique.slice(k).concat(unique.slice(0, k));
       };
+
+      const zoneGrammarPool = GRAMMAR_DRILL_BANK_BY_ZONE[zone.id] || GRAMMAR_DRILL_BANK_BY_ZONE.lagoon_a1;
+      const zoneTransformPool = CAMBRIDGE_TRANSFORM_BY_ZONE[zone.id] || CAMBRIDGE_TRANSFORM_BY_ZONE.lagoon_a1;
 
       const stepDefinitions = [
         {
@@ -15879,21 +16536,56 @@ window.ScayaWordDictionary = {
                 explanation: `Эталонная конструкция: «${ruleExample}» (${grammarSum}).`
               });
             }
-            for (let k = 4; k < 9; k++) {
-              const v = vocab[k % vocab.length];
-              const blanked = makeBlankSentence(v.example || v.ex, v.en);
+
+            // 3 профильных грамматических тренажёра (артикли, предлоги, времена, словообразование, инверсия)
+            for (let g = 0; g < 3; g++) {
+              const drill = zoneGrammarPool[(mIdx * 3 + g) % zoneGrammarPool.length];
               list.push({
                 id: `${base.id}_s2_q${list.length + 1}`,
                 stageNum: list.length + 1,
-                stageLabel: `Задание ${list.length + 1}/8 • Грамматика и лексика`,
+                stageLabel: `Задание ${list.length + 1}/8 • ${drill.topic}`,
                 type: "multiple_choice",
-                badge: `Шаг ${stepNumber}/50 • Практика ${zone.cefr}`,
-                prompt: `Дополни предложение без потери грамматического смысла («${cleanRu(v.ru)}»):\n«${blanked}»`,
-                options: rotateOpts(v.en, pickDistractorsEn(v.en, 3, k + 3), k),
-                correct: v.en,
-                explanation: `Верный ответ: «${v.en}». Полная фраза: ${v.example || v.ex}`
+                badge: `Шаг ${stepNumber}/50 • Грамматика ${zone.cefr}`,
+                prompt: drill.prompt,
+                options: rotateOpts(drill.correct, drill.options.filter(o => o !== drill.correct), mIdx + g + 1),
+                correct: drill.correct,
+                explanation: drill.explanation
               });
             }
+
+            // Тренажёр Cambridge Key Word Transformation (перефразирование без потери смысла)
+            const trItem = zoneTransformPool[mIdx % zoneTransformPool.length];
+            if (trItem) {
+              list.push({
+                id: `${base.id}_s2_q${list.length + 1}`,
+                stageNum: list.length + 1,
+                stageLabel: `Задание ${list.length + 1}/8 • Cambridge Transform`,
+                type: "cambridge_transform",
+                badge: `Шаг ${stepNumber}/50 • Перефразирование ${zone.cefr}`,
+                keyWord: trItem.keyWord,
+                originalSentence: trItem.originalSentence,
+                templateBefore: trItem.templateBefore,
+                templateAfter: trItem.templateAfter,
+                options: rotateOpts(trItem.correct, trItem.options.filter(o => o !== trItem.correct), mIdx + 2),
+                correct: trItem.correct,
+                explanation: trItem.explanation
+              });
+            }
+
+            const vContext = vocab[(mIdx + 4) % vocab.length];
+            const blankedContext = makeBlankSentence(vContext.example || vContext.ex, vContext.en);
+            list.push({
+              id: `${base.id}_s2_q${list.length + 1}`,
+              stageNum: list.length + 1,
+              stageLabel: `Задание ${list.length + 1}/8 • Грамматика и лексика`,
+              type: "multiple_choice",
+              badge: `Шаг ${stepNumber}/50 • Практика ${zone.cefr}`,
+              prompt: `Дополни предложение без потери грамматического смысла («${cleanRu(vContext.ru)}»):\n«${blankedContext}»`,
+              options: rotateOpts(vContext.en, pickDistractorsEn(vContext.en, 3, 7), mIdx + 1),
+              correct: vContext.en,
+              explanation: `Верный ответ: «${vContext.en}». Полная фраза: ${vContext.example || vContext.ex}`
+            });
+
             if (spEx) {
               list.push({
                 ...JSON.parse(JSON.stringify(spEx)),
@@ -15968,7 +16660,7 @@ window.ScayaWordDictionary = {
           stepSuffix: "Ловушки и ошибки",
           buildExercises: (stepNumber) => {
             const list = [];
-            for (let k = 0; k < 4; k++) {
+            for (let k = 0; k < 3; k++) {
               const v = vocab[(k * 2) % vocab.length];
               const wrongWord = pickDistractorsEn(v.en, 1, k + 5)[0] || "wrong";
               const goodSent = v.example || v.ex;
@@ -15986,17 +16678,40 @@ window.ScayaWordDictionary = {
                 explanation: `Вместо «${wrongWord}» здесь нужно слово «${v.en}» (${cleanRu(v.ru)}): “${goodSent}”.`
               });
             }
-            if (mcEx) {
+            // 2 ловушки из профильного грамматического банка (артикли, предлоги, времена, фразовые глаголы, словообразование)
+            for (let g = 0; g < 2; g++) {
+              const trap = zoneGrammarPool[(mIdx * 2 + g + 3) % zoneGrammarPool.length];
               list.push({
-                ...JSON.parse(JSON.stringify(mcEx)),
-                id: `${base.id}_s4_q5`,
-                stageNum: 5,
-                stageLabel: "Задание 5/8 • Ловушка грамматики",
-                showVocabIntro: false,
-                badge: `Шаг ${stepNumber}/50 • Грамматика`
+                id: `${base.id}_s4_q${list.length + 1}`,
+                stageNum: list.length + 1,
+                stageLabel: `Задание ${list.length + 1}/8 • Ловушка: ${trap.topic}`,
+                type: "multiple_choice",
+                badge: `Шаг ${stepNumber}/50 • Без ошибок ${zone.cefr}`,
+                prompt: trap.prompt,
+                options: rotateOpts(trap.correct, trap.options.filter(o => o !== trap.correct), mIdx + g + 2),
+                correct: trap.correct,
+                explanation: trap.explanation
               });
             }
-            for (let k = 5; k < 8; k++) {
+            // Cambridge Key Word Transformation (второй вариант для закрепления)
+            const trItem2 = zoneTransformPool[(mIdx + 1) % zoneTransformPool.length];
+            if (trItem2) {
+              list.push({
+                id: `${base.id}_s4_q${list.length + 1}`,
+                stageNum: list.length + 1,
+                stageLabel: `Задание ${list.length + 1}/8 • Перефразируй (${trItem2.keyWord})`,
+                type: "cambridge_transform",
+                badge: `Шаг ${stepNumber}/50 • Cambridge ${zone.cefr}`,
+                keyWord: trItem2.keyWord,
+                originalSentence: trItem2.originalSentence,
+                templateBefore: trItem2.templateBefore,
+                templateAfter: trItem2.templateAfter,
+                options: rotateOpts(trItem2.correct, trItem2.options.filter(o => o !== trItem2.correct), mIdx + 3),
+                correct: trItem2.correct,
+                explanation: trItem2.explanation
+              });
+            }
+            for (let k = 6; k < 8; k++) {
               const v = vocab[(k + 2) % vocab.length];
               const blanked = makeBlankSentence(v.example || v.ex, v.en);
               list.push({
@@ -16022,72 +16737,97 @@ window.ScayaWordDictionary = {
           buildExercises: (stepNumber) => {
             const list = [];
             if (rdEx) {
+              // Вопрос 1/3 по тексту: Главная мысль и сюжет
               list.push({
                 ...JSON.parse(JSON.stringify(rdEx)),
                 id: `${base.id}_s5_q1`,
                 stageNum: 1,
-                stageLabel: "Задание 1/8 • Чтение истории",
-                badge: `Шаг ${stepNumber}/50 • Чтение ${zone.cefr}`
+                stageLabel: "Задание 1/8 • Чтение (Вопрос 1/3: Сюжет)",
+                badge: `Шаг ${stepNumber}/50 • Чтение 1/3 (${zone.cefr})`
+              });
+
+              // Вопрос 2/3 по тексту: Деталь из второго/третьего абзаца истории
+              const paras = Array.isArray(rdEx.paragraphs) ? rdEx.paragraphs : [];
+              const targetPara = paras[1] || paras[0] || { en: vocab[0].example, ru: vocab[0].ru };
+              const vInStory = vocab.find(v => new RegExp("\\b" + v.en.slice(0, 4), "i").test(targetPara.en)) || vocab[1] || vocab[0];
+              const detailBlanked = makeBlankSentence(targetPara.en, vInStory.en);
+              list.push({
+                id: `${base.id}_s5_q2`,
+                stageNum: 2,
+                stageLabel: "Задание 2/8 • Чтение (Вопрос 2/3: Детали)",
+                type: "reading_comprehension",
+                badge: `Шаг ${stepNumber}/50 • Чтение 2/3 (${zone.cefr})`,
+                storyTitle: rdEx.storyTitle,
+                paragraphs: paras,
+                prompt: `Вопрос 2/3 по деталям текста: какое ключевое слово стояло в абзаце истории?\n«${detailBlanked}»`,
+                options: rotateOpts(vInStory.en, pickDistractorsEn(vInStory.en, 3, mIdx + 4), 1),
+                correct: vInStory.en,
+                explanation: `В тексте истории звучала фраза: “${targetPara.en}” (${targetPara.ru || cleanRu(vInStory.ru)}).`
+              });
+
+              // Вопрос 3/3 по тексту: Значение слова и выражения в контексте истории (Vocabulary in Context)
+              const vCtx = vocab.find((v, idx) => idx > 0 && v !== vInStory) || vocab[2] || vocab[0];
+              const vCtxRu = cleanRu(vCtx.ru);
+              list.push({
+                id: `${base.id}_s5_q3`,
+                stageNum: 3,
+                stageLabel: "Задание 3/8 • Чтение (Вопрос 3/3: Лексика текста)",
+                type: "reading_comprehension",
+                badge: `Шаг ${stepNumber}/50 • Чтение 3/3 (${zone.cefr})`,
+                storyTitle: rdEx.storyTitle,
+                paragraphs: paras,
+                prompt: `Вопрос 3/3 (Слово в контексте истории): что означает выражение «${vCtx.en}» ${vCtx.tr || ""} в этой теме?`,
+                options: rotateOpts(vCtxRu, pickDistractorsRu(vCtxRu, 3, mIdx + 8), 2),
+                correct: vCtxRu,
+                explanation: `В контексте рассказа и темы слово «${vCtx.en}» переводится как «${vCtxRu}» (пример: “${vCtx.example || vCtx.ex}”).`
               });
             }
             if (lsEx) {
               list.push({
                 ...JSON.parse(JSON.stringify(lsEx)),
-                id: `${base.id}_s5_q2`,
-                stageNum: 2,
-                stageLabel: "Задание 2/8 • Аудирование",
+                id: `${base.id}_s5_q4`,
+                stageNum: list.length + 1,
+                stageLabel: `Задание ${list.length + 1}/8 • Аудирование`,
                 badge: `Шаг ${stepNumber}/50 • Слух ${zone.cefr}`
               });
             }
-            for (let k = 0; k < 2; k++) {
-              const v = vocab[(k * 3 + 2) % vocab.length];
-              const sent = v.example || v.ex;
-              list.push({
-                id: `${base.id}_s5_q${list.length + 1}`,
-                stageNum: list.length + 1,
-                stageLabel: `Задание ${list.length + 1}/8 • Фраза на слух`,
-                type: "listening_comprehension",
-                badge: `Шаг ${stepNumber}/50 • Аудирование фразы`,
-                audioText: sent,
-                prompt: "Прослушай фразу и выбери ключевое слово, которое в ней прозвучало:",
-                options: rotateOpts(v.en, pickDistractorsEn(v.en, 3, k + 6), k + 1),
-                correct: v.en,
-                explanation: `Прозвучала фраза: “${sent}” (ключевое слово — «${v.en}», ${cleanRu(v.ru)}).`
-              });
-            }
+            const vListen = vocab[(mIdx * 3 + 2) % vocab.length];
+            const sentListen = vListen.example || vListen.ex;
+            list.push({
+              id: `${base.id}_s5_q5`,
+              stageNum: list.length + 1,
+              stageLabel: `Задание ${list.length + 1}/8 • Фраза на слух`,
+              type: "listening_comprehension",
+              badge: `Шаг ${stepNumber}/50 • Аудирование фразы`,
+              audioText: sentListen,
+              prompt: "Прослушай фразу и выбери ключевое слово, которое в ней прозвучало:",
+              options: rotateOpts(vListen.en, pickDistractorsEn(vListen.en, 3, 6), 2),
+              correct: vListen.en,
+              explanation: `Прозвучала фраза: “${sentListen}” (ключевое слово — «${vListen.en}», ${cleanRu(vListen.ru)}).`
+            });
             if (wbEx) {
               list.push({
                 ...JSON.parse(JSON.stringify(wbEx)),
-                id: `${base.id}_s5_q5`,
-                stageNum: 5,
-                stageLabel: "Задание 5/8 • Синтез предложения",
-                badge: `Шаг ${stepNumber}/50 • Синтез`
-              });
-            }
-            if (mcEx) {
-              list.push({
-                ...JSON.parse(JSON.stringify(mcEx)),
                 id: `${base.id}_s5_q6`,
-                stageNum: 6,
-                stageLabel: "Задание 6/8 • Проверка правила",
-                showVocabIntro: false,
-                badge: `Шаг ${stepNumber}/50 • Грамматика`
+                stageNum: list.length + 1,
+                stageLabel: `Задание ${list.length + 1}/8 • Синтез предложения`,
+                badge: `Шаг ${stepNumber}/50 • Синтез`
               });
             }
             if (spEx) {
               list.push({
                 ...JSON.parse(JSON.stringify(spEx)),
                 id: `${base.id}_s5_q7`,
-                stageNum: 7,
-                stageLabel: "Задание 7/8 • Произношение и речь",
+                stageNum: list.length + 1,
+                stageLabel: `Задание ${list.length + 1}/8 • Произношение и речь`,
                 badge: `Шаг ${stepNumber}/50 • Speaking`
               });
             }
             const lastV = vocab[vocab.length - 1];
             list.push({
               id: `${base.id}_s5_q8`,
-              stageNum: 8,
-              stageLabel: "Задание 8/8 • Финал главы",
+              stageNum: list.length + 1,
+              stageLabel: `Задание ${list.length + 1}/8 • Финал главы`,
               type: "multiple_choice",
               badge: `Шаг ${stepNumber}/50 • Босс-финал ${zone.cefr}`,
               prompt: `Финальный вопрос темы «${base.titleRu.replace(/^Урок\s*\d+:\s*/i, "")}»:\nВыбери слово для “${makeBlankSentence(lastV.example || lastV.ex, lastV.en)}”`,
@@ -16095,7 +16835,7 @@ window.ScayaWordDictionary = {
               correct: lastV.en,
               explanation: `Отлично! «${lastV.en}» (${cleanRu(lastV.ru)}) закрывает главу!`
             });
-            return list;
+            return list.slice(0, 8);
           }
         }
       ];
@@ -16107,6 +16847,48 @@ window.ScayaWordDictionary = {
 
       stepDefinitions.forEach(def => {
         const stepNum = mIdx * 5 + def.subIdx;
+        const drillForStep = zoneGrammarPool[(mIdx * 3 + def.subIdx) % zoneGrammarPool.length];
+        const trForStep = zoneTransformPool[(mIdx + def.subIdx) % zoneTransformPool.length];
+        const baseTheory = base.theory ? JSON.parse(JSON.stringify(base.theory)) : {
+          headline: grammarSum,
+          skyNote: "",
+          timelineComparison: [],
+          cambridgeTip: ""
+        };
+        if (def.subIdx === 2 && drillForStep) {
+          baseTheory.headline = `${baseTheory.headline} + ${drillForStep.topic}`;
+          baseTheory.timelineComparison = [
+            ...(baseTheory.timelineComparison || []),
+            {
+              label: `Фокус шага • ${drillForStep.topic}`,
+              example: drillForStep.correct,
+              note: drillForStep.explanation
+            }
+          ];
+        } else if (def.subIdx === 3 && wbEx) {
+          baseTheory.headline = `Порядок слов и структура фразы • ${cleanThemeTitle}`;
+          baseTheory.timelineComparison = [
+            ...(baseTheory.timelineComparison || []),
+            {
+              label: "Эталонная сборка предложения (Word Order)",
+              example: wbEx.correctSentence || wbEx.correct,
+              note: wbEx.explanation || "В английском предложении соблюдается строгий порядок: Подлежащее → Сказуемое → Дополнение → Обстоятельство."
+            }
+          ];
+        } else if (def.subIdx === 4 && trForStep) {
+          baseTheory.headline = `Ловушки и перефразирование (Cambridge ${zone.cefr})`;
+          baseTheory.timelineComparison = [
+            ...(baseTheory.timelineComparison || []),
+            {
+              label: `Key Word Transformation • Слово ${trForStep.keyWord}`,
+              example: `${trForStep.originalSentence} → ${trForStep.templateBefore}${trForStep.correct}${trForStep.templateAfter}`,
+              note: trForStep.explanation
+            }
+          ];
+        } else if (def.subIdx === 5 && rdEx) {
+          baseTheory.headline = `Чтение (3 вопроса), Аудирование и Речь • ${rdEx.storyTitle || cleanThemeTitle}`;
+        }
+
         expandedUnits.push({
           ...base,
           id: def.id,
@@ -16115,6 +16897,7 @@ window.ScayaWordDictionary = {
           chapterNumber: mIdx + 1,
           chapterTitle: cleanThemeTitle,
           nodeType: def.nodeType,
+          theory: baseTheory,
           titleRu: `Шаг ${stepNum}: ${cleanThemeTitle} • ${def.stepSuffix}`,
           titleEn: `Step ${stepNum}: ${base.titleEn} (${def.stepSuffix})`,
           exercises: def.buildExercises(stepNum)

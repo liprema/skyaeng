@@ -2491,13 +2491,24 @@ const ScayaApp = {
   // --------------------------------------------------------------------------
   // ВКЛАДКА 3: STORIES (В СТИЛЕ Y2K GROOVY «STORIES — COFFEE & VINYL» ИЗ app_ui_groovy_concept.jpg)
   // --------------------------------------------------------------------------
+  setStoriesReadingLevelFilter(cefr = 'ALL') {
+    this.storiesReadingFilter = cefr || 'ALL';
+    this.playTone('correct');
+    this.renderAll();
+  },
+
   renderStoriesTab(container) {
     const stories = window.ScayaCurriculum.stories || [];
     const allUnits = window.ScayaCurriculum.units || [];
     const zones = window.ScayaCurriculum.oceanZones || [];
-    const readingUnits = zones
-      .map(z => allUnits.find(u => u.zoneId === z.id && u.nodeType === 'reading') || allUnits.find(u => u.zoneId === z.id))
-      .filter(Boolean);
+    const allReadingUnits = allUnits.filter(u => u.nodeType === 'reading');
+    const activeCefrFilter = this.storiesReadingFilter || (this.state.user.detectedLevel || 'A1');
+    const readingUnits = activeCefrFilter === 'ALL'
+      ? allReadingUnits
+      : allReadingUnits.filter(u => {
+          const z = zones.find(zo => zo.id === u.zoneId);
+          return z && z.cefr === activeCefrFilter;
+        });
     const completed = this.state.completedStories || [];
 
     container.innerHTML = `
@@ -2532,7 +2543,13 @@ const ScayaApp = {
         }).join('')}
       </div>
 
-      <h4 class="dopamine-section-pill cyan-pill">Чтение по уровням курса (A1 → C2)</h4>
+      <h4 class="dopamine-section-pill cyan-pill">Чтение по уровням курса (A1 → C2 • 60 текстов по 3 вопроса)</h4>
+      <div class="wardrobe-char-pills" style="margin-bottom: 12px;">
+        <button class="wardrobe-char-pill ${activeCefrFilter === 'ALL' ? 'active' : ''}" onclick="ScayaApp.setStoriesReadingLevelFilter('ALL')">Все (${allReadingUnits.length})</button>
+        ${['A1', 'A2', 'B1', 'B2', 'C1', 'C2'].map(lvl => `
+          <button class="wardrobe-char-pill ${activeCefrFilter === lvl ? 'active' : ''}" onclick="ScayaApp.setStoriesReadingLevelFilter('${lvl}')">${lvl} (10)</button>
+        `).join('')}
+      </div>
       <div class="stories-grid">
         ${readingUnits.map(ru => {
           const prog = this.state.unitProgress[ru.id] || { crowns: 0 };
@@ -2543,7 +2560,7 @@ const ScayaApp = {
           return `
             <div class="story-card groovy-story-card ${isDone ? 'completed' : ''}" onclick="ScayaApp.startReadingUnitDirect('${ru.id}')">
               <div class="groovy-story-card-top-bar">
-                <span class="groovy-story-kicker">Reading</span>
+                <span class="groovy-story-kicker">Reading • 3 вопроса</span>
                 <span class="groovy-pink-level-pill mini">${isDone ? `Зачтено (${prog.crowns}★)` : 'Level'}</span>
               </div>
               <div class="groovy-story-card-main">

@@ -775,6 +775,8 @@ window.ScayaMascot = {
   resolveStoryKey(storyId = "story_1") {
     const sid = String(storyId || "story_1");
     if (this.storyIllustrations[sid]) return sid;
+    if (sid === "story_7") return "story_3";
+    if (sid === "story_8") return "story_6";
     if (sid.includes("_a2_")) return "story_4";
     if (sid.includes("_b1_")) return "story_2";
     if (sid.includes("_b2_")) return "story_5";
