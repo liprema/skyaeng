@@ -233,7 +233,7 @@ window.ScayaCurriculum = {
     {
         "id": "pq_9",
         "cefr": "C1",
-        "zoneId": "twilight_c1",
+        "zoneId": "trench_c1",
         "prompt": "Not only ___ the exam, but she also got the highest score in Cambridge.",
         "options": [
             "did she pass",
@@ -246,8 +246,8 @@ window.ScayaCurriculum = {
     },
     {
         "id": "pq_10",
-        "cefr": "C1",
-        "zoneId": "twilight_c1",
+        "cefr": "C2",
+        "zoneId": "atlantis_c2",
         "prompt": "___ it not been for the lighthouse, the ship would have hit the reef.",
         "options": [
             "Had",
@@ -15711,8 +15711,9 @@ window.ScayaWordDictionary = {
       const mcEx = baseEx.find(e => e.type === "multiple_choice") || baseEx[0];
       const wbEx = baseEx.find(e => e.type === "word_bank") || baseEx[1] || baseEx[0];
       const rdEx = baseEx.find(e => e.type === "reading_comprehension") || baseEx[2] || baseEx[0];
-      const lsEx = baseEx.find(e => e.type === "listening_comprehension") || baseEx[3] || baseEx[0];
-      const spEx = baseEx.find(e => e.type === "speaking_pronunciation") || baseEx[4] || baseEx[0];
+      const lsEx = baseEx.find(e => e.type === "listening" || e.type === "listening_comprehension") || baseEx[3] || baseEx[0];
+      const spEx = baseEx.find(e => e.type === "speaking" || e.type === "speaking_pronunciation") || baseEx[4] || baseEx[0];
+      const grammarSum = (base.theory && base.theory.headline) || base.grammarSummary || base.titleRu || "Грамматика урока";
 
       const pickDistractorsEn = (correctEn, count = 3, seedOffset = 0) => {
         const out = [];
@@ -15823,7 +15824,7 @@ window.ScayaWordDictionary = {
                 badge: `Шаг ${stepNumber}/50 • Грамматика ${zone.cefr}`
               });
             }
-            const ruleFormula = (base.theory && base.theory.murphyRules && base.theory.murphyRules[0] && base.theory.murphyRules[0].formula) || base.grammarSummary;
+            const ruleFormula = (base.theory && base.theory.murphyRules && base.theory.murphyRules[0] && base.theory.murphyRules[0].formula) || grammarSum;
             const ruleExample = (base.theory && base.theory.murphyRules && base.theory.murphyRules[0] && base.theory.murphyRules[0].example) || (vocab[0] && vocab[0].example) || "English is fun.";
             const exTokens = tokenizeSentence(ruleExample);
             if (exTokens.length >= 3) {
@@ -15835,13 +15836,14 @@ window.ScayaWordDictionary = {
                 stageLabel: "Задание 2/8 • Формула в речи",
                 type: "word_bank",
                 badge: `Шаг ${stepNumber}/50 • Формула ${zone.cefr}`,
-                prompt: `Собери эталонный пример по правилу (${base.grammarSummary}):`,
-                promptRu: `Ориентир: ${ruleFormula}`,
+                audioText: ruleExample,
+                prompt: `Прослушай и собери эталонный пример по правилу «${grammarSum}»:`,
+                promptRu: `Прослушай 🔊 и собери фразу (формула: ${ruleFormula})`,
                 words: exTokens.concat(dists),
                 distractors: dists,
                 correct: ruleExample,
                 correctSentence: ruleExample,
-                explanation: `Эталонная конструкция: «${ruleExample}» (${base.grammarSummary}).`
+                explanation: `Эталонная конструкция: «${ruleExample}» (${grammarSum}).`
               });
             }
             for (let k = 4; k < 9; k++) {
@@ -15898,8 +15900,9 @@ window.ScayaWordDictionary = {
                 stageLabel: `Задание ${list.length + 1}/8 • Собери предложение`,
                 type: "word_bank",
                 badge: `Шаг ${stepNumber}/50 • Сборка фразы`,
-                prompt: `Собери английское предложение со словом «${v.en}» (${cleanRu(v.ru)}):`,
-                promptRu: `Ключевое слово: ${v.en} — ${cleanRu(v.ru)}`,
+                audioText: sent,
+                prompt: `Прослушай 🔊 и собери предложение со словом «${v.en}» (${cleanRu(v.ru)}):`,
+                promptRu: `Слово в центре фразы: «${v.en}» (${cleanRu(v.ru)})`,
                 words: words.concat(extra),
                 distractors: extra,
                 correct: sent,

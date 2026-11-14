@@ -98,7 +98,13 @@ const ScayaApp = {
 
   startLiveServerSync() {
     try {
-      if (typeof window === 'undefined' || !window.location || !/^https?:/.test(window.location.protocol) || typeof fetch !== 'function') {
+      if (
+        typeof window === 'undefined' ||
+        !window.location ||
+        !/^https?:/.test(window.location.protocol) ||
+        /github\.io$/i.test(window.location.hostname || '') ||
+        typeof fetch !== 'function'
+      ) {
         return;
       }
       let pulling = false;
@@ -609,7 +615,7 @@ const ScayaApp = {
     this.selectedNodeId = null;
     this.playTone('tap');
     this.renderAll();
-    const scroller = document.getElementById('scaya-main-content');
+    const scroller = document.getElementById('scaya-main-view');
     if (scroller) scroller.scrollTop = 0;
   },
 
@@ -1321,7 +1327,14 @@ const ScayaApp = {
       this.session.availableWords = [...ex.words]
         .map((word, idx) => ({ id: `w_${idx}`, text: word, used: false }))
         .sort(() => Math.random() - 0.5);
-    } else if (ex.type === 'listening' && ex.audioText) {
+      if (ex.audioText) {
+        setTimeout(() => {
+          if (this.session.active && this.session.exercises[this.session.currentIndex] === ex) {
+            this.speakEnglish(ex.audioText, 'sky');
+          }
+        }, 280);
+      }
+    } else if ((ex.type === 'listening' || ex.type === 'listening_comprehension') && ex.audioText) {
       setTimeout(() => {
         if (this.session.active && this.session.exercises[this.session.currentIndex] === ex) {
           this.speakEnglish(ex.audioText, 'sky');
@@ -1487,34 +1500,86 @@ const ScayaApp = {
       `;
     }
 
-    // Очищаем текст задания от лишнего визуального шума и мета-подписей
-    const cleanSentenceText = (raw) => {
-      if (!raw) return '';
-      let text = String(raw).trim();
-      if (text.includes('\n')) {
-        const parts = text.split('\n').map(s => s.trim()).filter(Boolean);
-        text = parts[parts.length - 1];
+    // Умный разбор текста задания (поддержка вопросов на перевод, вставки пропусков ___ и охоты на ошибки)
+    const parsePromptDisplay = (rawPrompt, rawSentenceWithCheck) => {
+      const full = String(rawSentenceWithCheck || rawPrompt || '').trim();
+      if (!full) return { instruction: 'Дополни предложение', mainText: '', subHint: '' };
+
+      // 1. Вопросы на перевод слова («Как переводится слово...» / «Какое английское слово означает...»)
+      if (/^(Как переводится|Какое английское слово)/i.test(full)) {
+        const lines = full.split('\n').map(s => s.trim()).filter(Boolean);
+        return {
+          instruction: 'Выбери правильный перевод',
+          mainText: lines[0] || full,
+          subHint: lines.slice(1).join(' ')
+        };
       }
-      const guillemetMatch = text.match(/«([^»]+)»/);
-      if (guillemetMatch && guillemetMatch[1]) {
-        text = guillemetMatch[1].trim();
+
+      // 2. Задания с двумя строками (инструкция + предложение с пропуском в кавычках)
+      if (full.includes('\n')) {
+        const lines = full.split('\n').map(s => s.trim()).filter(Boolean);
+        const firstLine = lines[0];
+        const lastLine = lines[lines.length - 1];
+        const guillemet = lastLine.match(/«([^»]+)»/);
+        const afterGuillemet = lastLine.replace(/.*«[^»]+»\s*/, '').trim();
+        const extractedSentence = guillemet && guillemet[1] ? guillemet[1].trim() : lastLine.replace(/^[«"“]+|[»"”]+$/g, '').trim();
+        const ruHintMatch = firstLine.match(/\(([^)]+)\)/);
+        const subHint = afterGuillemet || (ruHintMatch ? `Подсказка: ${ruHintMatch[1]}` : '');
+        return {
+          instruction: firstLine.replace(/:\s*$/, ''),
+          mainText: extractedSentence,
+          subHint
+        };
       }
-      return text.replace(/^[«"“]+|[»"”]+$/g, '').trim();
+
+      return {
+        instruction: 'Дополни предложение',
+        mainText: full.replace(/^[«"“]+|[»"”]+$/g, '').trim(),
+        subHint: ''
+      };
     };
 
     let exerciseBodyHTML = '';
 
     if (ex.type === 'multiple_choice' || ex.type === 'spot_mistake') {
-      const sentenceOnly = cleanSentenceText(ex.sentenceWithCheck || ex.prompt);
+      const parsed = parsePromptDisplay(ex.prompt, ex.sentenceWithCheck);
       exerciseBodyHTML = `
-        <div class="duolingo-task-instruction">Дополни предложение</div>
+        <div class="duolingo-task-instruction">${parsed.instruction}</div>
         ${this.renderWordTooltipBanner()}
         <div class="exercise-prompt-card">
-          <div class="exercise-prompt-text">${this.renderInteractiveWords(sentenceOnly, 'sky')}</div>
+          <div class="exercise-prompt-text">${this.renderInteractiveWords(parsed.mainText, 'sky')}</div>
+          ${parsed.subHint ? `<div class="speaking-ru-line" style="margin-top:6px;">${this.renderInteractiveWords(parsed.subHint, 'sky')}</div>` : ''}
         </div>
 
         <div class="exercise-options-list">
           ${ex.options.map(opt => {
+            const isSelected = this.session.selectedAnswer === opt;
+            let stateClass = isSelected ? 'selected' : '';
+            if (this.session.checked) {
+              if (opt === ex.correct) stateClass = 'correct-opt';
+              else if (isSelected && !this.session.isCorrect) stateClass = 'wrong-opt';
+            }
+            return `
+              <button class="exercise-option-btn ${stateClass}"
+                ${this.session.checked ? 'disabled' : ''}
+                onclick="ScayaApp.selectOption(${JSON.stringify(opt).replace(/"/g, '&quot;')})">
+                <span>${opt}</span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } else if (ex.type === 'error_hunter') {
+      const buggyText = ex.buggySentence || ex.prompt || '';
+      exerciseBodyHTML = `
+        <div class="duolingo-task-instruction">${ex.prompt || 'Найди и исправь ошибку по смыслу'}</div>
+        ${this.renderWordTooltipBanner()}
+        <div class="exercise-prompt-card">
+          <div class="exercise-prompt-text">${this.renderInteractiveWords(buggyText, 'sky')}</div>
+        </div>
+
+        <div class="exercise-options-list">
+          ${(ex.options || []).map(opt => {
             const isSelected = this.session.selectedAnswer === opt;
             let stateClass = isSelected ? 'selected' : '';
             if (this.session.checked) {
@@ -1575,10 +1640,10 @@ const ScayaApp = {
           }).join('')}
         </div>
       `;
-    } else if (ex.type === 'listening') {
+    } else if (ex.type === 'listening' || ex.type === 'listening_comprehension') {
       const audioPhrase = ex.audioText || ex.correct;
       exerciseBodyHTML = `
-        <div class="duolingo-task-instruction">Что ты слышишь?</div>
+        <div class="duolingo-task-instruction">${ex.prompt || 'Что ты слышишь?'}</div>
         <div class="stage-listening-box">
           <div class="listening-mascot-row">
             ${window.ScayaMascot.renderSVG('happy', this.state.user.avatarOutfit, 54)}
@@ -1611,7 +1676,7 @@ const ScayaApp = {
           }).join('')}
         </div>
       `;
-    } else if (ex.type === 'speaking') {
+    } else if (ex.type === 'speaking' || ex.type === 'speaking_pronunciation') {
       const phrase = ex.targetPhrase || ex.correct;
       const isSpokenReady = Boolean(this.session.selectedAnswer);
       exerciseBodyHTML = `
@@ -1677,11 +1742,22 @@ const ScayaApp = {
         </div>
       `;
     } else if (ex.type === 'word_bank' || ex.type === 'listening_speak') {
-      const cleanRuSentence = cleanSentenceText(ex.promptRu || ex.prompt);
+      const wbInstruction = ex.prompt && ex.promptRu && ex.prompt !== ex.promptRu
+        ? ex.prompt
+        : 'Собери это предложение на английском';
+      const wbCardText = ex.promptRu || ex.prompt || '';
+      const wbAudio = ex.audioText || ex.correctSentence || ex.correct || '';
       exerciseBodyHTML = `
-        <div class="duolingo-task-instruction">Собери это предложение на английском</div>
+        <div class="duolingo-task-instruction">${wbInstruction}</div>
         <div class="word-bank-prompt-box">
-          <div class="word-bank-ru">${cleanRuSentence}</div>
+          <div class="word-bank-ru">${wbCardText}</div>
+          ${wbAudio ? `
+            <div style="margin-top:8px;">
+              <button class="btn-audio-mini" onclick="ScayaApp.speakEnglish(${JSON.stringify(wbAudio).replace(/"/g, '&quot;')}, 'sky')">
+                🔊 Прослушать фразу
+              </button>
+            </div>
+          ` : ''}
         </div>
 
         <div class="assembled-sentence-area">
@@ -1708,10 +1784,11 @@ const ScayaApp = {
     }
 
     const correctText = ex.correct || ex.correctSentence;
+    const isSpeakingType = ex.type === 'speaking' || ex.type === 'speaking_pronunciation';
     const canCheck = Boolean(
       this.session.selectedAnswer ||
       this.session.assembledWords.length > 0 ||
-      ex.type === 'speaking'
+      isSpeakingType
     );
 
     overlay.innerHTML = `
@@ -1759,8 +1836,8 @@ const ScayaApp = {
           <div class="lesson-footer">
             <button class="btn-check-answer ${canCheck ? 'ready' : 'disabled'}"
               ${canCheck ? '' : 'disabled'}
-              onclick="${ex.type === 'speaking' ? `ScayaApp.confirmSpokenAloud(${JSON.stringify(ex.targetPhrase || ex.correct).replace(/"/g, '&quot;')}, ${JSON.stringify(ex.correct).replace(/"/g, '&quot;')})` : 'ScayaApp.checkCurrentExercise()'}">
-              ${ex.type === 'speaking' && this.session.isListeningMic ? 'Отправить голосовое →' : 'Проверить'}
+              onclick="${isSpeakingType ? `ScayaApp.confirmSpokenAloud(${JSON.stringify(ex.targetPhrase || ex.correct).replace(/"/g, '&quot;')}, ${JSON.stringify(ex.correct).replace(/"/g, '&quot;')})` : 'ScayaApp.checkCurrentExercise()'}">
+              ${isSpeakingType && this.session.isListeningMic ? 'Отправить голосовое →' : 'Проверить'}
             </button>
           </div>
         `}
@@ -1804,13 +1881,14 @@ const ScayaApp = {
 
     if (ex.type === 'word_bank' || ex.type === 'listening_speak') {
       userAnswer = this.session.assembledWords.map(w => w.text).join(' ').trim();
-      expected = ex.correctSentence.trim();
+      expected = (ex.correctSentence || ex.correct || '').trim();
     } else {
       userAnswer = (this.session.selectedAnswer || '').trim();
-      expected = ex.correct.trim();
+      expected = (ex.correct || '').trim();
     }
 
-    const isRight = userAnswer.toLowerCase() === expected.toLowerCase();
+    const normAns = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, ' ').replace(/[.,!?;:]+$/g, '');
+    const isRight = normAns(userAnswer) === normAns(expected);
     this.session.checked = true;
     this.session.isCorrect = isRight;
 
@@ -1888,8 +1966,10 @@ const ScayaApp = {
       return { cefr: 'B1', zoneId: 'reef_b1', startUnitId: firstOfZone('reef_b1', 'unit_b1_21') };
     } else if (correctCount <= 8) {
       return { cefr: 'B2', zoneId: 'ocean_b2', startUnitId: firstOfZone('ocean_b2', 'unit_b2_31') };
+    } else if (correctCount === 9) {
+      return { cefr: 'C1', zoneId: 'trench_c1', startUnitId: firstOfZone('trench_c1', 'unit_c1_41') };
     } else {
-      return { cefr: 'C1', zoneId: 'twilight_c1', startUnitId: firstOfZone('twilight_c1', 'unit_c1_41') };
+      return { cefr: 'C2', zoneId: 'atlantis_c2', startUnitId: firstOfZone('atlantis_c2', 'unit_c2_51') };
     }
   },
 
@@ -2026,10 +2106,13 @@ const ScayaApp = {
     const accuracy = Math.round((this.session.correctCount / total) * 100);
     const isPlacement = this.session.mode === 'placement';
     const isSkip = this.session.mode === 'skip_jump';
+    const isMistakes = this.session.mode === 'mistakes_review';
     const addedCards = this.session.newlyAddedCardsCount || 0;
     const currentZoneId = (this.session.unit && this.session.unit.zoneId) || (this.state.user && this.state.user.currentZoneId) || 'lagoon_a1';
     const currentLevel = (this.state.user && this.state.user.detectedLevel) || 'A1';
     const stepTitle = (this.session.unit && this.session.unit.titleRu) ? this.session.unit.titleRu : `Уровень ${currentLevel}`;
+    const earnedXp = isPlacement ? 50 : isSkip ? 45 : isMistakes ? 25 : 35;
+    const earnedPearls = isPlacement ? 40 : isSkip ? 35 : isMistakes ? 20 : 25;
 
     overlay.innerHTML = `
       <div class="lesson-complete-screen groovy-victory-screen">
@@ -2037,16 +2120,20 @@ const ScayaApp = {
           <div class="groovy-card-squiggle-tl">
             ${window.ScayaMascot.renderGroovyCornerSquiggles('#FF6FB5', 'top-left')}
           </div>
-          <div class="groovy-victory-stamp-tr">
-            ${window.ScayaMascot.renderGroovyDaisyStamp('#FFEE00', 64, '• STEP CLEAR • SCAYA VIBE ')}
-          </div>
 
-          <div class="groovy-victory-top-badge">
+          <div class="groovy-victory-top-pill">
             ${isPlacement
               ? `LEVEL ${currentLevel} UNLOCKED`
               : isSkip
                 ? `SKIP TEST PASSED • ${currentLevel}`
                 : `STEP COMPLETE • LEVEL ${currentLevel}`}
+          </div>
+
+          <div class="groovy-victory-hero-stage" onclick="ScayaApp.greetOceanFriend('sky', '${currentZoneId}')">
+            <div class="groovy-victory-daisy-bg">
+              ${window.ScayaMascot.renderGroovyDaisyStamp('#FFEE00', 142, '• STEP CLEAR • SCAYA VIBE ')}
+            </div>
+            ${window.ScayaMascot.renderPathStandingMascot(132, currentZoneId)}
           </div>
 
           <h2 class="groovy-victory-title">
@@ -2063,35 +2150,32 @@ const ScayaApp = {
               : stepTitle}
           </div>
 
-          <div class="groovy-victory-mascot-stage" onclick="ScayaApp.greetOceanFriend('sky', '${currentZoneId}')">
-            ${window.ScayaMascot.renderPathStandingMascot(132, currentZoneId)}
-          </div>
-
           <div class="groovy-victory-stats-row">
-            <div class="groovy-victory-stat-pill yellow">
-              <span class="gv-stat-val">${accuracy}%</span>
-              <span class="gv-stat-lbl">Точность</span>
+            <div class="groovy-victory-stat-pill stat-yellow">
+              <span class="groovy-victory-stat-val">${accuracy}%</span>
+              <span class="groovy-victory-stat-lbl">Точность</span>
             </div>
-            <div class="groovy-victory-stat-pill pink">
-              <span class="gv-stat-val">+35 XP</span>
-              <span class="gv-stat-lbl">Опыт</span>
+            <div class="groovy-victory-stat-pill stat-pink">
+              <span class="groovy-victory-stat-val">+${earnedXp} XP</span>
+              <span class="groovy-victory-stat-lbl">Опыт</span>
             </div>
-            <div class="groovy-victory-stat-pill blue">
-              <span class="gv-stat-val">+25</span>
-              <span class="gv-stat-lbl">Ракушки</span>
+            <div class="groovy-victory-stat-pill stat-blue">
+              <span class="groovy-victory-stat-val">+${earnedPearls}</span>
+              <span class="groovy-victory-stat-lbl">Ракушки</span>
             </div>
           </div>
 
-          ${addedCards > 0 ? `
-            <button class="groovy-victory-cards-pill" onclick="ScayaApp.exitLesson(); ScayaApp.switchTab('flashcards')">
-              <span>+${addedCards} новых слов в Cards</span>
-              <span>→</span>
-            </button>
-          ` : ''}
+          <div class="groovy-victory-actions">
+            ${addedCards > 0 ? `
+              <button class="groovy-victory-btn-secondary" onclick="ScayaApp.exitLesson(); ScayaApp.switchTab('flashcards')">
+                +${addedCards} новых слов в Cards →
+              </button>
+            ` : ''}
 
-          <button class="btn-groovy-victory-continue" onclick="ScayaApp.exitLesson()">
-            Дальше по дорожке (${currentLevel}) →
-          </button>
+            <button class="groovy-victory-btn-primary" onclick="ScayaApp.exitLesson()">
+              Дальше по дорожке (${currentLevel}) →
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -2251,21 +2335,21 @@ const ScayaApp = {
       <!-- БЛОК 2: ЕДИНЫЙ АККУРАТНЫЙ КОНТЕЙНЕР КОЛОДЫ С 2-КОЛОНОЧНОЙ СЕТКОЙ КАРТОЧЕК -->
       <div class="groovy-deck-container-card">
         <div class="groovy-deck-header-row">
-          <h4>Словарь колоды</h4>
-          <span class="groovy-deck-count-pill">${allCards.length} шт.</span>
+          <h4 class="groovy-deck-title">Словарь колоды</h4>
+          <span class="groovy-deck-badge">${filtered.length} шт.</span>
         </div>
         <div class="groovy-deck-grid-2col">
-          ${allCards.map(c => `
-            <div class="groovy-mini-word-card ${c.id === activeCard?.id ? 'selected' : ''}" onclick="ScayaApp.selectFlashcardFromList('${c.id}')">
-              <div class="gmw-top">
-                <strong class="gmw-en">${c.en}</strong>
+          ${filtered.map(c => `
+            <div class="groovy-mini-word-card ${c.id === activeCard?.id ? 'active selected' : ''}" onclick="ScayaApp.selectFlashcardFromList('${c.id}')">
+              <div class="groovy-mini-word-top">
+                <strong class="groovy-mini-word-en">${c.en}</strong>
                 ${c.isCustom ? `
                   <button class="btn-delete-custom" onclick="event.stopPropagation(); ScayaApp.deleteCustomFlashcard('${c.id}')">✕</button>
                 ` : `
-                  <span class="gmw-badge">${this.formatNextReviewBadge(c)}</span>
+                  <span class="groovy-mini-lvl">${this.formatNextReviewBadge(c)}</span>
                 `}
               </div>
-              <div class="gmw-ru">${c.ru}</div>
+              <div class="groovy-mini-word-ru">${c.ru}</div>
             </div>
           `).join('')}
         </div>
@@ -2391,7 +2475,9 @@ const ScayaApp = {
     const stories = window.ScayaCurriculum.stories || [];
     const allUnits = window.ScayaCurriculum.units || [];
     const zones = window.ScayaCurriculum.oceanZones || [];
-    const readingUnits = zones.map(z => allUnits.find(u => u.zoneId === z.id)).filter(Boolean);
+    const readingUnits = zones
+      .map(z => allUnits.find(u => u.zoneId === z.id && u.nodeType === 'reading') || allUnits.find(u => u.zoneId === z.id))
+      .filter(Boolean);
     const completed = this.state.completedStories || [];
 
     container.innerHTML = `
@@ -3512,12 +3598,13 @@ const ScayaApp = {
   getDirectIosAppUrl() {
     try {
       const { uid, isVip } = window.ScayaCloud.getSessionIdentity();
-      const base = (window.location && window.location.origin && /^https?:/.test(window.location.origin))
-        ? window.location.origin
-        : 'https://40bcc6e3aa1ca1.lhr.life';
-      return `${base}/?uid=${encodeURIComponent(uid || '542487197')}${isVip ? '&vip=1' : ''}`;
+      if (window.location && window.location.origin && /^https?:/.test(window.location.origin)) {
+        const cleanPath = (window.location.pathname || '').replace(/\/index\.html$/i, '').replace(/\/+$/, '');
+        return `${window.location.origin}${cleanPath}/?uid=${encodeURIComponent(uid || '542487197')}${isVip ? '&vip=1' : ''}`;
+      }
+      return `https://liprema.github.io/skyaeng/?uid=${encodeURIComponent(uid || '542487197')}${isVip ? '&vip=1' : ''}`;
     } catch (e) {
-      return window.location ? window.location.href : '';
+      return window.location ? window.location.href : 'https://liprema.github.io/skyaeng/';
     }
   },
 

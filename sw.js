@@ -2,7 +2,7 @@
 // SCAYA ULTRA-FAST SERVICE WORKER (CACHE-FIRST ДЛЯ КАРТИНОК /img/* = 0ms ЗАГРУЗКА!)
 // ============================================================================
 
-const CACHE_NAME = 'scaya-groovy-v34';
+const CACHE_NAME = 'scaya-groovy-v35';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

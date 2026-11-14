@@ -5643,9 +5643,30 @@ body.ipad-device .scaya-top-bar {
   gap: 12px;
 }
 
+.groovy-studio-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.groovy-card-counter-pill {
+  background: #FFFFFF;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-family: var(--font-display, 'Unbounded', sans-serif);
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: 2px 2px 0px #000000;
+  white-space: nowrap;
+}
+
 .groovy-segmented-filters {
+  flex: 1;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 6px;
   background: #EDE4CE;
   border: 2.5px solid #000000;
@@ -5688,8 +5709,8 @@ body.ipad-device .scaya-top-bar {
 }
 
 .groovy-studio-srs-dock {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding-top: 2px;
 }
