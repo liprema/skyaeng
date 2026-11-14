@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Scaya",
+    "slug": "scaya-english",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#0284C7"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.scaya.english",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Scaya использует микрофон для тренировки английского произношения со Скаем."
+      }
+    },
+    "android": {
+      "package": "com.scaya.english",
+      "adaptiveIcon": {
+        "backgroundColor": "#0284C7"
+      }
+    }
+  }
+}

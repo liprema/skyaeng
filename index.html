@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru" style="background:#EDE4CE;color:#000000;">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Scaya" />
+  <meta name="theme-color" content="#EDE4CE" />
+  <title>Scaya — Y2K Groovy English (iPhone & iPad)</title>
+  <link rel="manifest" href="manifest.json?v=34" />
+  <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png?v=34" />
+  <link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png?v=34" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #EDE4CE;
+      color: #000000;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Rounded", "Segoe UI", Roboto, sans-serif;
+    }
+    .scaya-instant-boot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 68vh;
+      text-align: center;
+      padding: 24px;
+      gap: 12px;
+    }
+    .scaya-boot-pulse {
+      width: 68px;
+      height: 68px;
+      border-radius: 22px;
+      background: #FFEE00;
+      border: 2.5px solid #000000;
+      box-shadow: 0 5px 0 #000000;
+      animation: scayaPulse 1.2s infinite ease-in-out;
+    }
+    @keyframes scayaPulse {
+      0%, 100% { transform: scale(0.96); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+  <script>
+    // Встроенный автономный мост Telegram WebApp + автоопределение iPhone / iPad / Standalone PWA
+    (function() {
+      try {
+        var ua = navigator.userAgent || '';
+        var isIPad = /iPad/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var isIPhone = /iPhone|iPod/i.test(ua);
+        var isStandalone = (window.navigator && window.navigator.standalone === true) || (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+        document.addEventListener('DOMContentLoaded', function() {
+          if (document.body) {
+            if (isIPad) document.body.classList.add('ipad-device', 'ios-device');
+            if (isIPhone) document.body.classList.add('iphone-device', 'ios-device');
+            if (isStandalone) document.body.classList.add('ios-standalone');
+          }
+        });
+
+        if ('serviceWorker' in navigator && /^https?:/.test(window.location.protocol)) {
+          window.addEventListener('load', function() {
+            navigator.serviceWorker.register('sw.js?v=34').catch(function() {});
+          });
+        }
+
+        var postTgEvent = function(eventType, eventData) {
+          try {
+            var dataStr = eventData ? JSON.stringify(eventData) : '';
+            if (window.TelegramWebviewProxy && typeof window.TelegramWebviewProxy.postEvent === 'function') {
+              window.TelegramWebviewProxy.postEvent(eventType, dataStr);
+            } else if (window.external && typeof window.external.notify === 'function') {
+              window.external.notify(JSON.stringify({ eventType: eventType, eventData: eventData }));
+            } else if (window.parent && window.parent !== window) {
+              window.parent.postMessage(JSON.stringify({ eventType: eventType, eventData: eventData }), '*');
+            }
+          } catch (e) {}
+        };
+        var parsedUser = null;
+        var hash = window.location.hash ? window.location.hash.slice(1) : '';
+        if (hash && hash.indexOf('tgWebAppData=') !== -1) {
+          var hp = new URLSearchParams(hash);
+          var rawInit = hp.get('tgWebAppData');
+          if (rawInit) {
+            var ip = new URLSearchParams(rawInit);
+            var uJson = ip.get('user');
+            if (uJson) parsedUser = JSON.parse(uJson);
+          }
+        }
+        if (!window.Telegram) window.Telegram = {};
+        if (!window.Telegram.WebApp) {
+          window.Telegram.WebApp = {
+            initData: hash || '',
+            initDataUnsafe: { user: parsedUser },
+            platform: (hash.indexOf('tgWebAppPlatform=') !== -1) ? (new URLSearchParams(hash).get('tgWebAppPlatform') || 'ios') : 'unknown',
+            ready: function() { postTgEvent('web_app_ready'); },
+            expand: function() { postTgEvent('web_app_expand'); },
+            setHeaderColor: function(c) { postTgEvent('web_app_set_header_color', { color: c }); },
+            setBackgroundColor: function(c) { postTgEvent('web_app_set_background_color', { color: c }); },
+            openTelegramLink: function(url) {
+              window.location.href = url;
+            },
+            HapticFeedback: {
+              impactOccurred: function(st) { postTgEvent('web_app_trigger_haptic_feedback', { type: 'impact', impact_style: st || 'light' }); },
+              notificationOccurred: function(nt) { postTgEvent('web_app_trigger_haptic_feedback', { type: 'notification', notification_type: nt || 'success' }); }
+            }
+          };
+        }
+        postTgEvent('web_app_ready');
+        postTgEvent('web_app_expand');
+        postTgEvent('web_app_set_header_color', { color: '#EDE4CE' });
+        postTgEvent('web_app_set_background_color', { color: '#EDE4CE' });
+      } catch (err) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="css/styles.css?v=34" />
+</head>
+<body>
+
+  <!-- Верхняя панель подсказки при открытии на Mac -->
+  <div class="desktop-preview-toolbar">
+    <div class="brand-pill">Scaya • iPhone & iPad Ready</div>
+    <div>Level Path • Main Character Cards • Coffee & Vinyl Stories</div>
+  </div>
+
+  <!-- Универсальный контейнер iPhone / iPad -->
+  <div class="iphone-frame">
+    <!-- Вырез Dynamic Island (скрывается на реальном iPhone и iPad) -->
+    <div class="iphone-dynamic-island">
+      <div class="island-camera"></div>
+    </div>
+
+    <!-- Верхняя панель статуса: Уровень (CEFR), Стрик, Жемчужины, Жизни -->
+    <header id="scaya-top-stats" class="scaya-top-bar"></header>
+
+    <!-- Главная прокручиваемая область вкладок (с мгновенным фоном без белого экрана) -->
+    <main id="scaya-main-view" class="scaya-main-scroll">
+      <div class="scaya-instant-boot">
+        <div class="scaya-boot-pulse"></div>
+        <strong style="font-size:17px;color:#000000;">Загружаем Scaya Groovy Vibe...</strong>
+        <span style="font-size:13px;color:#1E6BFF;font-weight:800;">Скай, Лулу, Мира и Блинки для iPhone и iPad!</span>
+      </div>
+    </main>
+
+    <!-- Нижняя панель навигации -->
+    <nav id="scaya-bottom-nav" class="scaya-bottom-nav"></nav>
+
+    <!-- Полноэкранный режим интерактивного урока / Теста Уровня / Истории -->
+    <section id="scaya-lesson-overlay" class="scaya-lesson-overlay hidden"></section>
+
+    <!-- Модальные шторки (Шпаргалка Мёрфи, Приветствие Ская, Сердечки, Установка на iPhone/iPad) -->
+    <section id="scaya-modal-overlay" class="scaya-modal-overlay hidden"></section>
+
+    <!-- Всплывающее уведомление от розового дельфина Ская и его друзей -->
+    <div id="scaya-toast" class="scaya-toast"></div>
+  </div>
+
+  <!-- Модули приложения Scaya -->
+  <script src="js/dolphin-mascot.js?v=34"></script>
+  <script src="js/curriculum-data.js?v=34"></script>
+  <script src="js/supabase-service.js?v=34"></script>
+  <script src="js/app.js?v=34"></script>
+</body>
+</html>

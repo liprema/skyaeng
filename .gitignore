@@ -1,0 +1,16 @@
+# Секреты и состояние Telegram-моста (НЕ выкладывать в публичный GitHub!)
+.tg_bridge/
+scaya_state.json
+telegram_bridge.py
+
+# Системные и временные файлы
+.DS_Store
+Icon?
+__pycache__/
+*.py[cod]
+*.log
+*.tmp
+
+# Исходные референсы дизайна (не нужны в продакшен-сборке GitHub Pages)
+дизайн/
+examples/
